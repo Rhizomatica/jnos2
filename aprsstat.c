@@ -74,6 +74,8 @@ struct aq {
 	char dti;
 	int ndigis;
 	char digis[MAXDIGIS][AXALEN];
+
+	int hgroup; /* 11Nov2024, Maiko (VE4KLM), multiple heard lists */ 
 };
 
 #define	NULLAQ (struct aq*)0
@@ -184,14 +186,26 @@ static int show_aprshrdlst (char *dptr, int html, struct iface *ifp)
 
 	for(ap = Aq;ap != NULLAQ;ap = ap->next)
 	{
+		/* 30Sep2024, no more combined list for all */
+#ifdef	TO_BE_REMOVED
 		if ((ifp && ap->iface == ifp) || !ifp)
+#endif
+
+    /* 11Nov2024, Maiko, Only show entries for current heard group */
+       if (ap->hgroup != ifp->ax25->hgroup)
+        continue;
+
+		if (ifp && ap->iface == ifp)
 		{
 			dspflg = 0;
 
+		/* 30Sep2024, no more combined list for all */
+#ifdef	TO_BE_REMOVED
 			/* 17Aug2001, Display interface if different from main port */
 			/* 15Nov2023, Maiko, Now do only if IFP is null (all interfaces) */
 			if (!ifp && strcmp (ap->iface->name, aprs_port))
 				dspflg |= 0x01;
+#endif
 
 			/* 20Aug2001, VE4KLM, Playing with digis */
 			if (ap->ndigis)
@@ -224,17 +238,22 @@ static int show_aprshrdlst (char *dptr, int html, struct iface *ifp)
 				dptr += sprintf (dptr, "</td><td>%s</td><td>%d</td><td>",
 					tformat ((int32)(time (&curtime) - ap->time)), ap->currxcnt);
 
+		/* 30Sep2024, no more combined list for all */
+#ifdef	TO_BE_REMOVED
 				/* 15Nov2023, Maiko, Only do all ifaces if IFP is null */
 				if (!ifp && (dspflg & 0x01))
 					dptr += sprintf (dptr, "I %s", ap->iface->name);
-
+#endif
 				if (dspflg & 0x02)
 				{
+		/* 30Sep2024, no more combined list for all */
+#ifdef	TO_BE_REMOVED
 					/* 15Nov2023, Maiko, Only do all ifaces if IFP is null */
 					if (!ifp && (dspflg & 0x01))
 						dptr += sprintf (dptr, ", ");
 
 					dptr += sprintf (dptr, "P ");
+#endif
 
 					for (idx = 0; idx < ap->ndigis; idx++)
 					{
@@ -267,18 +286,22 @@ static int show_aprshrdlst (char *dptr, int html, struct iface *ifp)
 				tprintf ("%s  %-4d  ",
 			tformat ((int32)(time (&curtime) - ap->time)), ap->currxcnt);
 
+		/* 30Sep2024, no more combined list for all */
+#ifdef	TO_BE_REMOVED
 				/* 15Nov2023, Maiko, Only do all ifaces if IFP is null */
 				if (!ifp && (dspflg & 0x01))
 					tprintf ("I %s", ap->iface->name);
-
+#endif
 				if (dspflg & 0x02)
 				{
+		/* 30Sep2024, no more combined list for all */
+#ifdef	TO_BE_REMOVED
 					/* 15Nov2023, Maiko, Only do all ifaces if IFP is null */
 					if (!ifp && (dspflg & 0x01))
 						tprintf (", ");
 
 					tprintf ("P ");
-
+#endif
 					for (idx = 0; idx < ap->ndigis; idx++)
 					{
 						if (idx)
@@ -371,12 +394,23 @@ void display_aprshrd (void)
 		return;
 	}
 
+        j2tputs ("\n");  /* If you want less crowded listing - 30Sep2024 */
+
 	for (ifp = Ifaces; ifp->next; ifp = ifp->next)
 	{
 		if (ifp->type == CL_AX25)
 		{
 			/* 16Aug2001, Maiko, We now track the port user was heard on */
-			tprintf ("\nAPRS traffic heard on [%s]:\nCallsign      DTI     Since     Pkts  Path\n", ifp->name);
+			tprintf ("APRS traffic heard on [%s]:", ifp->name);
+
+			/* 11Nov2024, Maiko, Adding heard group to APRS link list too */
+		    if (ifp->ax25->hgroup)
+			{
+        		tprintf (" %s Hrd Group",
+					get_hgroup_description (ifp->ax25->hgroup));
+			}
+
+			tprintf ("\nCallsign      DTI     Since     Pkts  Path\n");
 
 			show_aprshrdlst (NULL, 0, ifp);
 
@@ -391,18 +425,24 @@ void display_aprshrd (void)
  * better sorting functions (by time) and more dynamic, time tested.
  */
 
-struct aq* aq_lookup (ifp, addr, sort, dti)
+struct aq* aq_lookup (ifp, addr, sort, dti, hgroup)
 struct iface *ifp;
 char *addr;
 int sort;
 char dti;
+int hgroup;	/* 29Jan2025, Maiko, Oops, forgot to modify for hgroup */
 {
 	register struct aq *ap;
 	struct aq *lqlast = NULLAQ;
   
 	for(ap = Aq;ap != NULLAQ;lqlast = ap,ap = ap->next)
 	{
-		if ((ap->iface == ifp) && addreq(ap->addr,addr))
+		/* 29Jan2025, Maiko, Oops, forgot to modify for hgroup */
+		if (!hgroup)
+			hgroup = ifp->ax25->hgroup;
+
+		/* 11Nov2024, Maiko (VE4KLM), multiple heard lists now possible */
+		if ((ap->iface == ifp) && (ap->hgroup == hgroup /* ifp->ax25->hgroup */) && addreq(ap->addr,addr))
 		{
 			if (!dtiheard || (dtiheard && ap->dti == dti))
 			{
@@ -422,15 +462,20 @@ char dti;
     return NULLAQ;
 }
 
-struct aq* aq_create(ifp,addr,axload)
+struct aq* aq_create(ifp,addr,axload, hgroup)
 struct iface *ifp;
 char *addr;
 int axload;		/* 16Mar2024, Maiko (VE4KLM), new axheard load flag */
+int hgroup;	/* 29Jan2025, Maiko, Oops, forgot to modify for hgroup */
 {
     register struct aq *ap;
     struct aq *lqlast = NULLAQ;
 
 	static struct aq *prevAq = NULLAQ;	/* 16Mar2024, Maiko (VE4KLM) */
+
+	/* 29Jan2025, Maiko, Oops, forgot to modify for hgroup */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
 
     if(maxaprshrd && numaq == maxaprshrd) {
         /* find and use last one in list */
@@ -449,6 +494,9 @@ int axload;		/* 16Mar2024, Maiko (VE4KLM), new axheard load flag */
     memcpy(ap->addr,addr,AXALEN);
     ap->iface = ifp;
 
+    /* 11Nov2024, Maiko, set 'current heard list' group */
+    ap->hgroup = ifp->ax25->hgroup;
+
 	/*
 	 * 16Mar2024, Maiko (VE4KLM), I want to get rid of the axhsort functions,
 	 * which I wrote back in 2021 for the axheard load functionality. They're
@@ -463,6 +511,9 @@ int axload;		/* 16Mar2024, Maiko (VE4KLM), new axheard load flag */
 	 * This really simplifies axload - not sure what I was thinking back then
 	 *  (recall, entries in axheard file are ordered most recent to old)
 	 */
+
+	/* 29Jan2025, Maiko, set the 'current heard group' */
+	ap->hgroup = hgroup;
 
 	if (axload)
 	{
@@ -537,10 +588,15 @@ void update_aprshrd (struct ax25 *hdr, struct iface *ifp, char dti)
 	register struct aq *ap;
 	time_t curtime;
 
-    if((ap = aq_lookup(ifp,hdr->source,1, dti)) == NULLAQ)
+	/*
+	 * 29Jan2025, Maiko (VE4KLM), Incorporating new heard group arg, set
+	 * to 0 and then the function will use the interface current hgroup.
+	 */
+
+    if((ap = aq_lookup(ifp,hdr->source,1, dti, 0)) == NULLAQ)
 	{
 		/* 16Mar2024, Maiko, added 3rd argument to function */
-        if((ap = aq_create(ifp,hdr->source, 0)) == NULLAQ)
+        if((ap = aq_create(ifp,hdr->source, 0, 0)) == NULLAQ)
             return;
 	}
 
@@ -575,10 +631,14 @@ int axsaveaprshrd (FILE *fp)
 	{
 		if (ap->iface == NULLIF)
 			continue;
+		/*
+		 * 27Jan2025, Maiko, Need to get the heard group into this file
+		 *  (for now just put after ndigis, since I don't load digis)
+		 */
 
-		fprintf (fp, "%s %s %d %d %d %d", ap->iface->name,
+		fprintf (fp, "%s %s %d %d %d %d %d", ap->iface->name,
 			pax25 (tmp, ap->addr), ap->time, ap->currxcnt,
-				(int)(ap->dti), ap->ndigis);
+				(int)(ap->dti), ap->ndigis, ap->hgroup);
 
 		for (cnt = 0; cnt < ap->ndigis; cnt++)
 			fprintf (fp, " %s", pax25 (tmp, ap->digis[cnt]));
@@ -601,6 +661,8 @@ int axloadaprshrd (FILE *fp, int gap)
 	struct iface *ifp;
 	struct aq *ap;
 
+	int hgroup;	/* 27Jan2025, Maiko, heard group support */
+
 	while (fgets (iobuffer, sizeof(iobuffer) - 2, fp) != NULLCHAR)
 	{
 		/*
@@ -610,8 +672,14 @@ int axloadaprshrd (FILE *fp, int gap)
 			break;
 		 */
 
-		sscanf (iobuffer, "%s %s %d %d %d %d", ifacename, callsign,
-			&axetime, &count, &dti, &ndigis);
+		/*
+		 * 27Jan2025, Maiko, Need to get the heard group into this file
+		 *  (for now just put after ndigis, since I don't save/load digis)
+		 */
+		hgroup = 0;
+
+		sscanf (iobuffer, "%s %s %d %d %d %d %d", ifacename, callsign,
+			&axetime, &count, &dti, &ndigis, &hgroup);
 
 		dti_c = (char)dti;
 
@@ -621,11 +689,13 @@ int axloadaprshrd (FILE *fp, int gap)
 		else if (setcall (tcall, callsign) == -1)
 			log (-1, "unable to set call [%s]", callsign);
 
+		/* 29Jan2025, Maiko (VE4KLM), Incorporating new heard group arg */
+
 		/* if the call is already there, then don't overwrite it of course */
-   		else if ((ap = aq_lookup (ifp, tcall, 1, dti_c)) == NULLAQ)
+   		else if ((ap = aq_lookup (ifp, tcall, 1, dti_c, hgroup)) == NULLAQ)
 		{
 			/* 16Mar2024, Maiko, added 3rd 'load' argument to function */
-			if ((ap = aq_create (ifp, tcall, 1)) == NULLAQ)
+			if ((ap = aq_create (ifp, tcall, 1, hgroup)) == NULLAQ)
 				log (-1, "unable to create Aq entry");
 			else
 			{
@@ -637,8 +707,11 @@ int axloadaprshrd (FILE *fp, int gap)
 				 * definitions, is that I need to pass some timing info.
 				 *
 				 * 22Mar2024, Maiko, APRS uses time(), not secclock() !
+				 *
+				 * 01Jul2024, Maiko, these are absolute time stamps, so why
+				 * the heck am I putting a GAP value into here ? No need !
 				 */
-				ap->time = axetime + gap;
+				ap->time = axetime;	/* + gap; */
 
 				ap->dti = dti_c;
 
@@ -648,6 +721,8 @@ int axloadaprshrd (FILE *fp, int gap)
 				 * change from one packet to another - don't bother for now.
 				 */
 				ap->ndigis = 0;
+
+				ap->hgroup = hgroup;	/* 27Jan2025, Maiko, finally */
 			}
 		}
 	}
@@ -666,6 +741,20 @@ int axloadaprshrd (FILE *fp, int gap)
  * heard list, normally because it was heard on the Internet
  * instead of RF.  We need to know where it was heard last to
  * know whether to gate between APRS-IS and RF.
+ *
+ * 29Jan2025, Maiko, this is actually a pain in the neck if ACKS
+ * are coming from BOTH RF and APRS-IS, which happens quite freq
+ * on my system, so a fair compromise would be to actually 'NOT'
+ * clear the entry if it has not been heard on RF for ?? min ?
+ *
+ * I need to come up with time diff code, but not today, so for now,
+ * just comment this out, which will solve my routing issues at the
+ * moment. Another problem is that if the call is cleared, and I try
+ * to message them, because they are no longer 'heard', the message
+ * goes out my default port - not the port I last heard them on.
+ *
+ * 01Feb2025, Maiko, Comment this out in aprssrv.c actually, we only
+ * want the RF related one, not both of them !
  */
 
 void clear_aprshrd( char *callsign )

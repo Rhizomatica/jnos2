@@ -25,6 +25,20 @@ struct ifax25 {
 #ifdef MAILBOX
     char bbscall[AXALEN];
 #endif
+
+	/*
+	 * 06Nov2024, Maiko (VE4KLM) - new multiple heard list, this hgroup
+	 * defines the 'current' group in affect, and is directly joined in
+	 * with the same hgroup variable in the link list heard structure.
+	 *
+	 * To set the 'current heard list' for a particular port, example :
+	 *
+	 *   ax25 h group=XXX rp0
+	 *
+	 *  where XXX is a string (like 17m, 30m, 10m, vhf, whatever)
+	 */
+
+	int hgroup;
 };
 
 #endif

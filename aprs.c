@@ -52,9 +52,16 @@ extern int aprs_poe;	/* 05Sep2001, Maiko, Flag Point of Entry call */
  *
  * 18May2004, Maiko, No longer static function, required outside of this
  * module for the experimental TIP server stuff for Kantronics TNCs.
+ *
+ * 30Sep2024, Maiko (VE4KLM), When we send to the internet system, we should
+ * be using the callsign of the interface it came in on - not the login call,
+ * which in my case does not indicate the port it arrived on, it's just the
+ * general callsign of my overall system, so the internet system really has
+ * no idea which of my RF ports it was heard on, just my overall system. I
+ * have to add a second argument to this function to get interface info.
  */
 
-char *format_POE_call (char *ptr)
+char *format_POE_call (char *ptr, struct iface *ifp)
 {
 #ifdef	USE_OLD_WAY
 	char *lptr = logon_callsign;
@@ -73,6 +80,7 @@ char *format_POE_call (char *ptr)
 	/* 05Sep2001, Maiko, Switched to using (-0n), leading 0 in SSID */
 	ptr += sprintf (ptr, "-0%d", ssid);
 #else
+	char tmp[AXBUF];
 	/*
 	 * 25Oct2002, Maiko, The 'standard' for the past year seems to
 	 * have become 'IGATE,I'. Also, now that the 'Q' structure has been
@@ -80,8 +88,16 @@ char *format_POE_call (char *ptr)
 	 * stick with the new 'standard' so that the 'Q' system works
 	 * properly with the NOSaprs software.
 	ptr += sprintf (ptr, ",%s,I", logon_callsign);
-	 */
+	 *
+	 * 30Sep2024, Maiko, Use interface call, NOT the APRS IS logon call,
+	 * keeping in mind, linkaddress might not be set, then use bbscall.
+	 *
 	ptr += sprintf (ptr, ",qAR,%s", logon_callsign);
+	 */
+	if (ifp->hwaddr)
+		ptr += sprintf (ptr, ",qAR,%s", pax25 (tmp, ifp->hwaddr));
+	else
+		ptr += sprintf (ptr, ",qAR,%s", pax25 (tmp, ifp->ax25->bbscall));
 #endif
 	return ptr;
 }
@@ -327,9 +343,11 @@ int aprs_processing (struct ax25 *hdr, struct iface *iface, struct mbuf *bp)
 		 * now, and *still* they don't have an official APRS IS Spec :-(
 		 *
 		 * If sysop does not want POE injection, it can be switched off.
+		 *
+		 * 30Sep2024, Maiko (VE4KLM), need interface hwaddr for POE call
 		 */
 		if (aprs_poe)
-			ptr = format_POE_call (ptr);
+			ptr = format_POE_call (ptr, iface);
 
 		/*
 		 * 18Jun2001, VE4KLM, Better add the newline and make sure
@@ -471,9 +489,11 @@ int aprs_processing (struct ax25 *hdr, struct iface *iface, struct mbuf *bp)
 			 * this module.
 			 *
 			 * If sysop does not like POE injection, it can be switched off.
+			 *
+			 * 30Sep2024, Maiko (VE4KLM), need interface hwaddr for POE call
 			 */
 			if (aprs_poe)
-				ptr = format_POE_call (ptr);
+				ptr = format_POE_call (ptr, iface);
 
 			ptr += sprintf (ptr, ":%.*s\n", len, ptr2);
 

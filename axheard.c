@@ -12,15 +12,21 @@
 #include "ax25.h"
 #include "ip.h"
 #include "timer.h"
+
+#include "netrom.h"	/* 18Nov2024, Maiko, for nrhash() function prototype */
   
 #define iscallsign(c) ((isupper(c)) || (isdigit(c)) || (c ==' '))
 int axheard_filter_flag = AXHEARD_PASS;
 
 /* 16Mar2024, Maiko, Add axload parameter to all 3 xx_create() functions */
+
+/* 23Nov2024, Maiko, Adding yet another arg to prototopes for new hgroup */
  
-static struct lq *al_create __ARGS((struct iface *ifp,char *addr, int));
-static struct ld *ad_lookup __ARGS((struct iface *ifp,char *addr,int sort));
-static struct ld *ad_create __ARGS((struct iface *ifp,char *addr, int));
+static struct lq *al_create __ARGS((struct iface *ifp,char *addr, int, int hgroup));
+
+/* 28Nov2024, Maiko, Adding yet another arg to prototopes for new hgroup */
+static struct ld *ad_lookup __ARGS((struct iface *ifp,char *addr,int sort, int hgroup));
+static struct ld *ad_create __ARGS((struct iface *ifp,char *addr, int, int hgroup));
 struct lq *Lq=NULLLQ;
 struct ld *Ld=NULLLD;
 
@@ -29,8 +35,9 @@ struct ld *Ld=NULLLD;
  * 15Apr2021, Maiko (VE4KLM), added digipeater address to lookup, we need to be able to
  * see if a callsign used multiple digipeaters ... bit of an oops ...
  */
-static struct lv *av_lookup __ARGS((struct iface *ifp,char *addr, char *digiaddr, int sort));
-static struct lv *av_create __ARGS((struct iface *ifp,char *addr, char *digiaddr, int axload));	/* 06Apr2021, Maiko, extra param now */
+/* 28Nov2024, Maiko, Adding yet another arg to prototopes for new hgroup */
+static struct lv *av_lookup __ARGS((struct iface *ifp,char *addr, char *digiaddr, int sort, int hgroup));
+static struct lv *av_create __ARGS((struct iface *ifp,char *addr, char *digiaddr, int axload, int hgroup));	/* 06Apr2021, Maiko, extra param now */
 struct lv *Lv=NULLLV;
 
 /*
@@ -166,9 +173,12 @@ char *addr;
 	/* 06Apr2021, Maiko, new function to cut code duplication */
 	if (!checkcall (addr))
 		return;
-  
-    if((lp = al_lookup(ifp,addr,1)) == NULLLQ)
-        if((lp = al_create(ifp,addr,0)) == NULLLQ)
+ 
+	/* 23Nov2024, Maiko, al_lookup () and al_create() both have an extra
+	 * new argument for heard group, for logsrc, set to 0 for default ifc
+	 */ 
+    if((lp = al_lookup(ifp,addr,1,0)) == NULLLQ)
+        if((lp = al_create(ifp,addr,0,0)) == NULLLQ)
             return;
     lp->currxcnt++;
     lp->time = secclock();
@@ -188,8 +198,9 @@ char *addr;
 	if (!checkcall (addr))
 		return;
   
-    if((lp = ad_lookup(ifp,addr,1)) == NULLLD)
-        if((lp = ad_create(ifp,addr,0)) == NULLLD)
+  /* 28Nov2024, Maiko (VE4KLM), multiple heard list support, new arg */
+    if((lp = ad_lookup(ifp,addr,1,0)) == NULLLD)
+        if((lp = ad_create(ifp,addr,0,0)) == NULLLD)
             return;
     lp->currxcnt++;
     lp->time = secclock();
@@ -226,8 +237,10 @@ void logDigisrc (struct iface *ifp, char *addr, char *digiaddr)
      *
      */
 
-    if((lv = av_lookup(ifp,addr,digiaddr,1)) == NULLLV)
-        if((lv = av_create(ifp,addr, digiaddr, 0)) == NULLLV)
+  /* 28Nov2024, Maiko (VE4KLM), multiple heard list support, new arg */
+
+    if((lv = av_lookup(ifp,addr,digiaddr,1, 0)) == NULLLV)
+        if((lv = av_create(ifp,addr, digiaddr, 0, 0)) == NULLLV)
             return;
     lv->currxcnt++;
     lv->time = secclock();
@@ -235,16 +248,22 @@ void logDigisrc (struct iface *ifp, char *addr, char *digiaddr)
 
 /* Look up an entry in the source data base */
 struct lq *
-al_lookup(ifp,addr,sort)
+al_lookup(ifp,addr,sort, hgroup)
 struct iface *ifp;
 char *addr;
 int sort;
+int hgroup;	/* 23Nov2024, Maiko, support for multiple heard lists */
 {
     register struct lq *lp;
     struct lq *lplast = NULLLQ;
+
+	/* 23Nov2024, Maiko, Doing this REALLY simplies conditional further down */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
   
-    for(lp = Lq;lp != NULLLQ;lplast = lp,lp = lp->next){
-        if((lp->iface == ifp) && addreq(lp->addr,addr)){
+    for(lp = Lq;lp != NULLLQ;lplast = lp,lp = lp->next) {
+		/* 06Nov2024, Maiko (VE4KLM), multiple heard lists now possible */
+        if((lp->iface == ifp) && (lp->hgroup == hgroup /* ifp->ax25->hgroup */) && addreq(lp->addr,addr)){
             if(sort && lplast != NULLLQ){
                 /* Move entry to top of list */
                 lplast->next = lp->next;
@@ -262,16 +281,21 @@ extern int Maxax25heard;
 /* Create a new entry in the source database */
 /* If there are too many entries, override the oldest one - WG7J */
 static struct lq *
-al_create(ifp,addr,axload)
+al_create(ifp,addr,axload, hgroup)
 struct iface *ifp;
 char *addr;
 int axload;	/* 16Mar2024, Maiko, new argument for loading heard list */
+int hgroup;	/* 23Nov2024, Maiko, support for multiple heard lists */
 {
     extern int numal;        /* in ax25cmd.c - K5JB */
     register struct lq *lp;
     struct lq *lplast = NULLLQ;
 
 	static struct lq *prevLq = NULLLQ;	/* 16Mar2024, Maiko (VE4KLM) */
+
+	/* 23Nov2024, Maiko, Doing this REALLY simplies conditional further down */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
   
     if(Maxax25heard && numal == Maxax25heard) {
         /* find and use last one in list */
@@ -289,6 +313,9 @@ int axload;	/* 16Mar2024, Maiko, new argument for loading heard list */
     }
     memcpy(lp->addr,addr,AXALEN);
     lp->iface = ifp;
+
+  /* 06Nov2024, Maiko (VE4KLM), set 'current heard list' group */
+    lp->hgroup = hgroup; /* ifp->ax25->hgroup; */
 
 	/*
 	 * 16Mar2024, Maiko (VE4KLM), getting rid of the hsort functions,
@@ -320,16 +347,23 @@ int axload;	/* 16Mar2024, Maiko, new argument for loading heard list */
   
 /* Look up an entry in the destination database */
 static struct ld *
-ad_lookup(ifp,addr,sort)
+ad_lookup(ifp,addr,sort, hgroup)
 struct iface *ifp;
 char *addr;
 int sort;
+int hgroup;	/* 28Nov2024, Maiko, support for multiple heard lists */
 {
     register struct ld *lp;
     struct ld *lplast = NULLLD;
   
     for(lp = Ld;lp != NULLLD;lplast = lp,lp = lp->next){
-        if((lp->iface == ifp) && addreq(lp->addr,addr)){
+
+	/* 28Nov2024, Maiko, Doing this REALLY simplies conditional further down */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
+
+		/* 06Nov2024, Maiko (VE4KLM), multiple heard lists now possible */
+        if((lp->iface == ifp) && (lp->hgroup == hgroup /* ifp->ax25->hgroup */) && addreq(lp->addr,addr)){
             if(sort && lplast != NULLLD){
                 /* Move entry to top of list */
                 lplast->next = lp->next;
@@ -343,16 +377,21 @@ int sort;
 }
 /* Create a new entry in the destination database */
 static struct ld *
-ad_create(ifp, addr, axload)
+ad_create(ifp, addr, axload, hgroup)
 struct iface *ifp;
 char *addr;
 int axload;	/* 16Mar2024, Maiko, new argument for loading heard list */
+int hgroup;	/* 28Nov2024, Maiko, support for multiple heard lists */
 {
     extern int numad;    /* In ax25cmd.c - K5JB */
     register struct ld *lp;
     struct ld *lplast = NULLLD;
 
 	static struct ld *prevLd = NULLLD;	/* 16Mar2024, Maiko (VE4KLM) */
+
+	/* 28Nov2024, Maiko, Doing this REALLY simplies conditional further down */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
   
     if(Maxax25heard && numad == Maxax25heard) { /* find and use last one in list */
 	/* 25Apr2023, Maiko, If lp is NULL, this will blow up on the lp->next */
@@ -369,6 +408,9 @@ int axload;	/* 16Mar2024, Maiko, new argument for loading heard list */
     }
     memcpy(lp->addr,addr,AXALEN);
     lp->iface = ifp;
+
+  /* 06Nov2024, Maiko (VE4KLM), set 'current heard list' group */
+    lp->hgroup = /* ifp->ax25->hgroup */ hgroup;
 
 	/*
 	 * 16Mar2024, Maiko (VE4KLM), getting rid of the hsort functions,
@@ -401,14 +443,20 @@ int axload;	/* 16Mar2024, Maiko, new argument for loading heard list */
 /*
  * 05Apr2021, Maiko (VE4KLM), Look up an entry in the digipeated source database
  * 15Apr2021, Maiko, should be using callsign / digipeater combo to do lookup !
+ * 28Nov2024, Maiko, adding hgroup for multiple heard list support
  */
-static struct lv * av_lookup (struct iface *ifp, char *addr, char *digiaddr, int sort)
+static struct lv * av_lookup (struct iface *ifp, char *addr, char *digiaddr, int sort, int hgroup)
 {
     register struct lv *lv;
     struct lv *lvlast = NULLLV;
   
+	/* 28Nov2024, Maiko, Doing this REALLY simplies conditional further down */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
+
     for(lv = Lv;lv != NULLLV;lvlast = lv,lv = lv->next){
-        if((lv->iface == ifp) && addreq(lv->addr,addr) && addreq(lv->digi,digiaddr)){
+		/* 06Nov2024, Maiko (VE4KLM), multiple heard lists now possible */
+        if((lv->iface == ifp) && (lv->hgroup == /* ifp->ax25->hgroup */ hgroup) && addreq(lv->addr,addr) && addreq(lv->digi,digiaddr)){
             if(sort && lvlast != NULLLV){
                 /* Move entry to top of list */
                 lvlast->next = lv->next;
@@ -424,8 +472,9 @@ static struct lv * av_lookup (struct iface *ifp, char *addr, char *digiaddr, int
 /*
  * 05Apr2021, Maiko (VE4KLM), Create a new entry in digipeated source database
  * 16Mar2024, Maiko, new argument axload for loading heard list
+ * 28Nov2024, Maiko, adding hgroup for multiple heard list support
  */
-static struct lv * av_create (struct iface *ifp, char *addr, char *digiaddr, int axload)
+static struct lv * av_create (struct iface *ifp, char *addr, char *digiaddr, int axload, int hgroup)
 {
 	/* 25Apr2023, Maiko, Oops, we should have a separate numav for this, wonder
 	 * if this is the reason why GUS is getting his crashes, so NEW 'numav' !
@@ -435,6 +484,10 @@ static struct lv * av_create (struct iface *ifp, char *addr, char *digiaddr, int
     struct lv *lvlast = NULLLV;
 
 	static struct lv *prevLv = NULLLV;	/* 16Mar2024, Maiko (VE4KLM) */
+
+	/* 28Nov2024, Maiko, Doing this REALLY simplies conditional further down */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
   
     if(Maxax25heard && numav == Maxax25heard) { /* find and use last one in list */
 	/* 25Apr2023, Maiko, If lv is NULL, this will blow up on the lv->next */
@@ -452,6 +505,9 @@ static struct lv * av_create (struct iface *ifp, char *addr, char *digiaddr, int
     memcpy(lv->addr,addr,AXALEN);
     memcpy(lv->digi,digiaddr,AXALEN);	/* 06Apr2021, Maiko */
     lv->iface = ifp;
+
+  /* 06Nov2024, Maiko (VE4KLM), set 'current heard list' group */
+    lv->hgroup = /* ifp->ax25->hgroup */ hgroup;
 
 	/*
 	 * 16Mar2024, Maiko (VE4KLM), getting rid of the hsort functions,
@@ -526,10 +582,12 @@ int doaxhsave (char *filename)
 	time_t now;
 	FILE *fp;
 
+#ifdef	APRSD	/* 29Jun2024, Maiko, some people don't want APRS stuff */
+	extern int axsaveaprshrd (FILE*);	/* 23Jun2024, Maiko */	
+#endif
+
 	if (filename == NULL)
 		filename = def_axheard_backup_file;
-
-	/* if ((fp = fopen ("AxHeardFile", "w+")) == NULLFILE) */
 
 	if ((fp = fopen (filename, "w+")) == NULLFILE)
 	{
@@ -552,9 +610,10 @@ int doaxhsave (char *filename)
   
 	for (lp = Lq; lp != NULLLQ; lp = lp->next)
 	{
-		// SAVE these : something to identify iface, lp->addr, lp->time, lp->currxcnt
-
-		fprintf (fp, "%s %s %d %d\n", lp->iface->name, pax25 (tmp, lp->addr), lp->time, lp->currxcnt);
+		/* 27Jan2025, Maiko (VE4KLM), Add hgroup hash (save heard group now) */
+		fprintf (fp, "%s %s %d %d %d\n",
+			lp->iface->name, pax25 (tmp, lp->addr),
+				lp->time, lp->currxcnt, lp->hgroup);
 	}
 
 	/*
@@ -564,37 +623,38 @@ int doaxhsave (char *filename)
 
 	fprintf (fp, "---\n");
 	for (lp2 = Ld; lp2 != NULLLD; lp2 = lp2->next)
-		fprintf (fp, "%s %s %d %d\n", lp2->iface->name, pax25 (tmp, lp2->addr), lp2->time, lp2->currxcnt);
+	{
+		/* 27Jan2025, Maiko (VE4KLM), Add hgroup hash (save heard group now) */
+		fprintf (fp, "%s %s %d %d %d\n",
+			lp2->iface->name, pax25 (tmp, lp2->addr),
+				lp2->time, lp2->currxcnt, lp2->hgroup);
+	}
 
 	fprintf (fp, "---\n");
 	for (lp3 = Lv; lp3 != NULLLV; lp3 = lp3->next)
 	{
 	  if( lp3->iface == NULLIF )
 	    continue;
-	  
-		/*
-		 * Arrgggg, Maiko (VE4KLM), I keep forgetting that pax25() is
-		 * not 'thread safe', meaning you can't have them on the same
-		 * 'line', the first call will cancel out subsequent one(s) !
-		 *
-	fprintf (fp, "%s %s %s %d %d\n", lp3->iface->name, pax25 (tmp, lp3->addr), pax25 (tmp, lp3->digi), lp3->time, lp3->currxcnt);
-		 *
-		 */
 
 		fprintf (fp, "%s %s ", lp3->iface->name, pax25 (tmp, lp3->addr));
 
- 		fprintf (fp, "%s %d %d\n", pax25 (tmp, lp3->digi), lp3->time, lp3->currxcnt);
+		/* 27Jan2025, Maiko (VE4KLM), Add hgroup hash (save heard group now) */
+ 		fprintf (fp, "%s %d %d %d\n",
+			pax25 (tmp, lp3->digi), lp3->time,
+				 lp3->currxcnt, lp3->hgroup);
 	}
 
+#ifdef	APRSD	/* 29Jun2024, Maiko, some people don't want APRS stuff */
 	/* 14Mar2024, Maiko (VE4KLM), Adding saving of APRS heard list */
 	axsaveaprshrd (fp);
+#endif
 
 	fclose (fp);
 
 	return 0;
 }
 
-/* 12Apr2021, Maiko (VE4KLM), sysop can now specify a filename, used to be void */
+/* 12Apr2021, Maiko (VE4KLM), sysop can now specify a filename */
 int doaxhload (char *filename)
 {
 	char iobuffer[80];
@@ -613,16 +673,15 @@ int doaxhload (char *filename)
 	struct ld *lp2;
 	struct lv *lp3;
 
-	extern struct lq *sort_ax_heard();	/* 13Apr2021, Maiko */
+	/* 18Nov2024, Maiko, multiple heard list requires additional hgroup entry */
+	int hgroup, retval;
 
-	/* 21May2021, Maiko (VE4KLM), two brand new sort functions */
-	extern struct ld *sort_ad_heard();
-	extern struct lv *sort_av_heard();
+#ifdef	APRSD	/* 29Jun2024, Maiko, some people don't want APRS stuff */
+	extern int axloadaprshrd (FILE*, int);	/* 23Jun2024, Maiko */
+#endif
 
 	if (filename == NULL)
 		filename = def_axheard_backup_file;
-
-	/* if ((fp = fopen ("AxHeardFile", "r")) == NULLFILE) */
 
 	if ((fp = fopen (filename, "r")) == NULLFILE)
 	{
@@ -658,9 +717,7 @@ int doaxhload (char *filename)
 	 * figure out the sort now ...
 	 *
 	 * Terrible of me though - more then a year to get to fixing it ?
-	 */
-
-	/*
+	 *
 	 * 21Apr2021, Maiko (VE4KLM), Be carefull here, do NOT allow loading
 	 * of the heard file from earlier version of JNOS - this can cause a
 	 * loop and/or a crash - thanks Ron (VE3CGR) for catching this !
@@ -678,31 +735,48 @@ int doaxhload (char *filename)
 		/* 21May2021, Maiko, Check for separator, break out for next list */
 		if (strstr (iobuffer, "---"))
 			break;
+	/*
+	 * 18Nov2024, Maiko, multiple heard list requires tacking new
+	 * hgroup to the end of the line, no longer trying to deal with
+	 * the old versions of AxHeardFile, there's no point really !
+	 */
+		axetime = 0; count = 0; hgroup = 0;
 
-		sscanf (iobuffer, "%s %s %d %d", ifacename, callsign, &axetime, &count);
-
-		/* 04Aug2023, Maiko, forgot to comment out earlier debugging
- 		 log (-1, "%s %s %d %d", ifacename, callsign, axetime, count); 
-		 */
+		retval = sscanf (iobuffer, "%s %s %d %d %d", ifacename, callsign,
+			&axetime, &count, &hgroup);
 
 		if ((ifp = if_lookup (ifacename)) == NULLIF)
+		{
 			log (-1, "unable to lookup iface [%s]", ifacename);
+			continue;
+		}
 
-		else if (setcall (thecall, callsign) == -1)
+		/*
+		 * The heard group description to hash mapping will now be initialized
+		 * elsewhere in the code, not going to try adding descriptions on the
+		 * fly as in my previous attempts at coding this (from 23Nov2024) !
+		 */
+
+		if (setcall (thecall, callsign) == -1)
 			log (-1, "unable to set call [%s]", callsign);
 
 		/* if the call is already there, then don't overwrite it of course */
-   		else if ((lp = al_lookup (ifp, thecall, 1)) == NULLLQ)
+	/* 23Nov2024, Maiko, al_lookup () has extra new argument for heard group */ 
+   		else if ((lp = al_lookup (ifp, thecall, 1, hgroup)) == NULLLQ)
 		{
-			if ((lp = al_create (ifp, thecall, 1)) == NULLLQ)
+	/* 23Nov2024, Maiko, al_create () has extra new argument for heard group */ 
+			if ((lp = al_create (ifp, thecall, 1, hgroup)) == NULLLQ)
 				log (-1, "unable to create Lq entry");
 			else
 			{
+				/* 18Nov2024, Maiko, Set the heard group if there is one */
+				lp->hgroup = hgroup;
+
 				lp->currxcnt = count;
 		/*
-		 * 27Jan2020, Maiko, This won't be accurate, need to find a way to offset
-		 * the last saved time of axheard file with 'now', so that is why I have
-		 * the time_gap value (called atatsave now) added to each time read in.
+		 * 27Jan2020, Maiko, This won't be accurate, need to find way to offset
+		 * the last saved time of axheard file with 'now', so that is why I've
+		 * got time_gap value (called atatsave now) added to each time read in.
 		 *
 		 * NOW - what will be interesting is that since JNOS logs these times
 		 * based on secclock(), since JNOS started, if the corrected times are
@@ -741,25 +815,39 @@ int doaxhload (char *filename)
 		if (strstr (iobuffer, "---"))
 			break;
 
-		sscanf (iobuffer, "%s %s %d %d", ifacename, callsign, &axetime, &count);
+		hgroup = 0;	/* 29Nov2024, oops, forgot to do this */
 
-		/* 04Aug2023, Maiko, forgot to comment out earlier debugging
- 		log (-1, "%s %s %d %d", ifacename, callsign, axetime, count); 
+		/*
+	 	 * 27Jan2025, Maiko, Not going to try and use heard group description
+		 * anymore in the AxHeardFile, just use an integer hash value, heard
+		 * group description to hash mapping will be init'd elsewhere in the
+		 * code, much simpler this way.
 		 */
 
-		if ((ifp = if_lookup (ifacename)) == NULLIF)
-			log (-1, "unable to lookup iface [%s]", ifacename);
+		retval = sscanf (iobuffer, "%s %s %d %d %d", ifacename, callsign,
+			&axetime, &count, &hgroup);
 
-		else if (setcall (thecall, callsign) == -1)
+		if ((ifp = if_lookup (ifacename)) == NULLIF)
+		{
+			log (-1, "unable to lookup iface [%s]", ifacename);
+			continue;
+		}
+
+		if (setcall (thecall, callsign) == -1)
 			log (-1, "unable to set call [%s]", callsign);
 
 		/* if the call is already there, then don't overwrite it of course */
-   		else if ((lp2 = ad_lookup (ifp, thecall, 1)) == NULLLD)
+		/* 28Nov2024, Maiko, note new hgroup argument passed */
+   		else if ((lp2 = ad_lookup (ifp, thecall, 1, hgroup)) == NULLLD)
 		{
-			if ((lp2 = ad_create (ifp, thecall, 1)) == NULLLD)
+			/* 28Nov2024, Maiko, note new hgroup argument passed */
+			if ((lp2 = ad_create (ifp, thecall, 1, hgroup)) == NULLLD)
 				log (-1, "unable to create Ld entry");
 			else
 			{
+				/* 28Nov2024, Maiko, Set the heard group if there is one */
+				lp2->hgroup = hgroup;
+
 				lp2->currxcnt = count;
 				lp2->time = (int32)(now - atatsave) + rtatsave - axetime + secclock();
 				lp2->time *= -1;
@@ -783,28 +871,35 @@ int doaxhload (char *filename)
 		if (strstr (iobuffer, "---"))
 			break;
 
-		sscanf (iobuffer, "%s %s %s %d %d", ifacename, callsign, digipeater, &axetime, &count);
+		hgroup = 0;	/* 29Nov2024, oops, forgot to do this */
 
-		/* 04Aug2023, Maiko, forgot to comment out earlier debugging
- 		log (-1, "%s %s %s %d %d", ifacename, callsign, digipeater, axetime, count); 
-		 */
+		retval = sscanf (iobuffer, "%s %s %s %d %d %d",
+			ifacename, callsign, digipeater, &axetime, &count, &hgroup);
 
 		if ((ifp = if_lookup (ifacename)) == NULLIF)
+		{
 			log (-1, "unable to lookup iface [%s]", ifacename);
+			continue;
+		}
 
-		else if (setcall (thecall, callsign) == -1)
+		if (setcall (thecall, callsign) == -1)
 			log (-1, "unable to set call [%s]", callsign);
 
 		else if (setcall (thedigi, digipeater) == -1)
 			log (-1, "unable to set call [%s]", callsign);
 
 		/* if the call is already there, then don't overwrite it of course */
-   		else if ((lp3 = av_lookup (ifp, thecall, thedigi, 1)) == NULLLV)
+		/* 28Nov2024, Maiko, note new hgroup argument passed */
+   		else if ((lp3 = av_lookup (ifp, thecall, thedigi, 1, hgroup)) == NULLLV)
 		{
-			if ((lp3 = av_create (ifp, thecall, thedigi, 1)) == NULLLV)
+			/* 28Nov2024, Maiko, note new hgroup argument passed */
+			if ((lp3 = av_create (ifp, thecall, thedigi, 1, hgroup)) == NULLLV)
 				log (-1, "unable to create Lv entry");
 			else
 			{
+				/* 28Nov2024, Maiko, Set the heard group if there is one */
+				lp3->hgroup = hgroup;
+
 				lp3->currxcnt = count;
 				lp3->time = (int32)(now - atatsave) + rtatsave - axetime + secclock();
 				lp3->time *= -1;
@@ -812,6 +907,7 @@ int doaxhload (char *filename)
 		}
 	}
 
+#ifdef	APRSD	/* 29Jun2024, Maiko, some people don't want APRS stuff */
 	/*
 	 * 22Mar2024, Maiko (VE4KLM), New load APRS heard list. The time()
 	 * function is used within the APRS heard information, not secclock()
@@ -819,26 +915,10 @@ int doaxhload (char *filename)
 	 * different time gap to the function below, no 100%, but better.
 	 */
 	axloadaprshrd (fp, (int32)(now - atatsave) + secclock());
+#endif
 
 	fclose (fp);
 
-	/*
-	 * 16Mar2024, Maiko (VE4KLM), It's not necessary to sort the link
-	 * lists, not sure what I was thinking back then, all I had to do
-	 * was change the manner in which the link lists are linked up.
-	 */
-#ifdef	DONT_COMPILE
-
-	/* new function required (Maiko) - need to sort by time, since file order does not match Lq order */
-
-	Lq = sort_ax_heard ();	/* confirmed working 7:40 pm 13Apr2021 !!! */
-
-	/* 21May201, Maiko (VE4KLM), two more brand new sort functions (see axhsort.c) */
-
-	Ld = sort_ad_heard ();
-	Lv = sort_av_heard ();
-
-#endif
 	return 0;
 }
 

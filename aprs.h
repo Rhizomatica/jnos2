@@ -250,8 +250,14 @@ extern int valid_dti_data (char dti, char *data);
 
 extern int aprs_send (char *data, int len);
 
-/* 18May2004, Maiko, no longer static to aprs.c module */
+/*
+ * 18May2004, Maiko, no longer static to aprs.c module
+ * 30Sep2024, Maiko, additional arg added for iface call
+ *
 extern char *format_POE_call (char *ptr);
+ */
+extern char *format_POE_call (char*, struct iface*);
+
 extern void aprs_logsent( struct ax25 *hdr, char *data, int len, char *interface );
 extern void aprs_logsentmbuf( struct ax25 *hdr, struct mbuf *bp, int offset, char *interface );
 

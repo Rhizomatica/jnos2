@@ -3,7 +3,12 @@
   
 #define SMTPTRACE           /* enable tracing for smtp */
 #define MAXSESSIONS 10      /* most connections allowed */
-#define JOBNAME     13      /* max size of a job name with null */
+/*
+ * 09Feb2025, Maiko (VE4KLM), what an obscure problem, seq number gets big,
+ * and it just so happens the gdb crash info suggests JOBNAME is too short.
+ *  (bump this up from 13 to a bit more, 20 should do the trick)
+ */
+#define JOBNAME     20      /* max size of a job name with null */
 #define LINELEN     256
 #define PLINELEN    256
 #define RLINELEN    512

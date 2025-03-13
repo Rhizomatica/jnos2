@@ -195,8 +195,23 @@ int rxbroadcast;    /* True if packet had link broadcast address */
     struct rtaccess *tpacc; /* temporary for access checking */
 #endif
     int pointer;        /* Relative pointer index for sroute/rroute */
-  
-    if(i_iface != NULLIF){
+
+    if(i_iface != NULLIF)
+    {
+	/*
+	 * 24May2024, Maiko (VE4KLM), discard IP if not allowed on AX25
+	 *  (will this work ? Mark or somebody needs to test this, it's
+	 *    been eons since I did any IP over AX25, sorry guys ...)
+	 *
+	 * 02Jun2024, Maiko, Aggggg, fixed bad typo, & NOT &= !
+	 */
+    	if (i_iface->flags & NO_IP_AX25)
+	{
+		ipInDiscards++;		/* use this for now */
+        	free_p(bp);
+       		return -1;
+	}
+
         ipInReceives++; /* Not locally generated */
         i_iface->iprecvcnt++;
     }

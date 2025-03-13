@@ -35,6 +35,7 @@
 #endif
 
 #include "netuser.h"
+#include "sockaddr.h"
 #include "ip.h"
 #include "files.h"
 #include "session.h"
@@ -48,6 +49,10 @@
 #include "aprs.h"	/* 16May2001, VE4KLM, Added prototypes finally */
 
 #include "pktdrvr.h"	/* 29Oct2023, Maiko */
+
+#ifdef IPV6
+#include "ipv6.h"
+#endif
 
 /*
  * 19Jun2020, Maiko (VE4KLM), breaking out callsigns lists functionality, and
@@ -703,7 +708,7 @@ int valid_dti_data (char dti, char *data)
 	int offset = 0;
 	int retval = 0;
 	int cnt = 0;
-	int len = strlen(data);
+//	int len = strlen(data);
 
 	switch (dti)
 	{
@@ -860,7 +865,7 @@ static int message_handler (char *data, int rf)
 	int numdigis = 0, digilen = 0, isthirdparty = 0;
 	int hastcpip = 0, hastcpxx = 0, hasnogate = 0, hasrfonly = 0;
 	char *tpstart = NULL, *bufstart = data;
-	int bultype;
+//	int bultype;
 
 	/* Directed Queries and Route Trace support, 29May2001 */
 	char tracebuf[100], *savebp = data;
@@ -870,12 +875,13 @@ static int message_handler (char *data, int rf)
 	void *vp = (void*)0;
 
 	/* 29Oct2023, Maiko, multiple APRS interfaces, proper message handling */
-	struct iface *ifp;
-	char tmp[AXBUF];
+//	struct iface *ifp;
+//	char tmp[AXBUF];
 
+#ifdef APRS_DEBUG_WZ0C 
 	aprslog(-1, "---------------------------------------------------------------------------");
 	aprslog(-1, "APRS (%s): %s", rf?"RF":"Igate",data );
-
+#endif
 
 	/* Set default return to forward.  All of the APRS-IS rules turn it 
 	 * off if the rules aren't met. */
@@ -1027,9 +1033,10 @@ static int message_handler (char *data, int rf)
 		return APRS_NOFORWARD;
 	}
 
+#ifdef APRS_DEBUG_WZ0C 
 	aprslog (Asocket, "* Got %s message from %s", rf?"RF":"Igate", srccall);
+#endif
 
-	
 	/* 03Oct2001, Maiko, Moved this up here, it's used for more stuff now */
 	mymsgargv[1] = srccall;
 
@@ -1213,8 +1220,9 @@ static int message_handler (char *data, int rf)
 	  }
 	}
 	
+#ifdef APRS_DEBUG_WZ0C 
 	aprslog (Asocket, "* Data (1): %s", data);
-
+#endif
 
 	/* Data validity check. */
 	
@@ -1236,7 +1244,9 @@ static int message_handler (char *data, int rf)
 
 	dti = *data++; /* Get the DTI (Data Type Identifier) */
 
+#ifdef APRS_DEBUG_WZ0C 
 	aprslog (Asocket, "* Got DTI %c", dti);
+#endif
 
 	if( rf && dti == '?' ){
 	  /* RF to igate exception criteria #4:
@@ -1394,15 +1404,28 @@ static int message_handler (char *data, int rf)
 		    /*
 		     * - packets from the station contain TCPIP* or TCPXX* in the header
 		     */
+#ifndef	KLM_APRS_DONT_CLEAR_HEARD
 		    clear_aprshrd( srccall );
+#else
+			log (-1, "don't clear [%s] from aprshrd - 29Jan2025", origsrccall);
+#endif
 		  } else {
 		    /*
 		     * - if gated (3rd-party) packets are seen on RF gated by the station and
 		     * containing TCPIP or TCPXX in the 3rd-party header
 		     * (in other words, the station is seen on RF as being an IGate).
+			 *
+			 * 01Feb2025, Maiko, See my comments in aprsstat.c on the clearing
+			 * of the call, this is actually not what I want, we should see if
+			 * station is still around, since we can get BOTH rf and aprs-is,
+			 * so clearing it screws up my multi-port routing, yup it does!
 		     */
+#ifndef	KLM_APRS_DONT_CLEAR_HEARD
 		    clear_aprshrd( origsrccall );
 		    aprs_setstatus( origsrccall, 1 );
+#else
+			log (-1, "don't clear [%s] from aprshrd - 29Jan2025", origsrccall);
+#endif
 		  }
 		}
 
@@ -1965,12 +1988,30 @@ static short doHash (const char *theCall)
 static int connect_aprs_net (ANETSRV *anetsrvp)
 {
 	struct sockaddr_in fsocket;
-	int comms_socket;
+	int comms_socket, retval = 0;
 	char logonstr[150], *lptr = logonstr;
 
-	fsocket.sin_family = AF_INET;
+	short family;	/* 22Nov2024, Maiko */
 
-	aprslog (-1, "Connecting Hostname [%s]", anetsrvp->server);
+#ifdef	IPV6
+
+	/* 22Nov2024, Maiko (VE4KLM), Allow connect to IPV6 aprs servers */
+	struct j2sockaddr_in6 fsocketv6;
+
+	copyipv6addr (resolve6 (anetsrvp->server), fsocketv6.sin6_addr.s6_addr);
+
+	if (fsocketv6.sin6_addr.s6_addr[0] != 0x00)
+	{
+
+		fsocketv6.sin6_family = family = AF_INET6;
+		fsocketv6.sin6_port = anetsrvp->port;
+	}
+	else		/* if resolve fails, goto ipv4 */
+	{
+
+#endif
+
+	fsocket.sin_family = family = AF_INET;
 
 	if ((fsocket.sin_addr.s_addr = resolve (anetsrvp->server)) == 0)
 	{
@@ -1980,9 +2021,25 @@ static int connect_aprs_net (ANETSRV *anetsrvp)
 
 	fsocket.sin_port = anetsrvp->port;
 
-	comms_socket = j2socket (AF_INET, SOCK_STREAM, 0);
+#ifdef	IPV6
+	}
+#endif
 
-	if (j2connect (comms_socket, (char*)&fsocket, SOCKSIZE) != 0)
+	if ((comms_socket = j2socket (family, SOCK_STREAM, 0)) == -1)
+	{
+		aprslog (-1, "no socket");
+		return -1;
+	}
+
+#ifdef IPV6
+	if (family == AF_INET6)
+		retval = j2connect (comms_socket, (char*)&fsocketv6, sizeof(fsocketv6));
+	else
+#endif		/* 31Jan2025, Maiko, Oops, should be #endif, not #else */
+
+	retval =  j2connect (comms_socket, (char*)&fsocket, SOCKSIZE);
+
+	if (retval)
 	{
 		aprslog (-1, "Connect failed");
 		close_s (comms_socket);
@@ -2628,9 +2685,11 @@ static void aprs_igaterun (int unused OPTIONAL, void *u OPTIONAL, void *p OPTION
 	aprslog( -1, "aprs_igaterun got empty buffer" );
       continue;
     }
-    
+
+#ifdef APRS_DEBUG_WZ0C 
     aprslog( -1, "============================================================================");
     aprslog( -1, "Received packet from Igate" );
+#endif
 
     /* 16Apr2001, VE4KLM, experimental message handler */
     /* 10Jul2001, VE4KLM, Added flag for RF or IGATE */
@@ -2993,7 +3052,7 @@ void serv44825 (int s, void *unused OPTIONAL, void *p OPTIONAL)
 			cp++;
 
 			
-			/*len++;	/* include NULL terminator */
+			// len++;	/* include NULL terminator */
 
 			/* for piggy backed messages, that have a NULL terminator
 			 * on the first message (only noticed with my software so

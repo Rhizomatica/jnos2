@@ -11,6 +11,8 @@
 #include "files.h"
 #ifdef  APRSD
 
+#include "j2KLMlists.h"		/* 23Jun2024, Maiko, gcc-14 is pickier */
+
 static int bulletin_timeout = 3600 * 24;
 static int announcement_timeout = 3600 * 168;
 static int nwsbulletin_timeout = 60 * 15;

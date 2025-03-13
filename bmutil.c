@@ -284,17 +284,26 @@ void *p;
 		if (m->stype == 'L')                     /* LL (List Last) command */
 			start = stop - atoi (argv[1]) + 1;
 		else
+
+#ifdef K6FSH_CUSTOM_2010
 		/*
 		 * The mailbox list commands 'L<' and 'L>' are followed by
 		 * string operands, but they are not used for numeric ranges
 		 * K6FSH  2010-04-29
+		 *
+		 * 30May2024, Maiko (VE4KLM), This just doesn't seem right, not
+	 	 * sure why it took this long to back out of it, since I've had
+		 * multiple sysops contact me saying L> and L< are long broke.
 		 */
 		if ((m->stype != '<') && (m->stype != '>'))
 		{
+#endif
 			start = atoi (argv[1]);
 			if (argc > 2)
 				stop = atoi (argv[2]);
+#ifdef K6FSH_CUSTOM_2010
 		}
+#endif
   
         /* Check the boundaries (fixes cases where search crit. was taken as range arg) */
         if(stop > m->nmsgs || !stop)
@@ -304,11 +313,19 @@ void *p;
     }
 	if (start > stop)
 	{
+        if ((m->stype == ' ') || (m->stype == 'M')
+#ifdef K6FSH_CUSTOM_2010
 		/*
 		 * The string fields following 'L<' and 'L>' are not considered
 		 * numeric range values. K6FSH  2010-04-29
+		 *
+		 * 30May2024, Maiko (VE4KLM), This just doesn't seem right, not
+	 	 * sure why it took this long to back out of it, since I've had
+		 * multiple sysops contact me saying L> and L< are long broke.
 		 */
-        if ((m->stype == ' ') || (m->stype == 'M') || (m->stype == '<') || (m->stype == '>'))
+ 			|| (m->stype == '<') || (m->stype == '>')
+#endif
+		)
             j2tputs("None to list.\n");
         else
             j2tputs("Invalid range.\n");

@@ -30,6 +30,9 @@ int check;
     int16 length;
     int16 csum;
 
+	/* 23Jun2024, Maiko, gcc-14 and implicit function defs */
+    extern void udp_dumpv6 (int, struct mbuf**, struct ipv6 *, int);
+
 #ifdef	IPV6
 	struct ipv6 ipv6;	/* 02Feb2023, Maiko (VE4KLM) */
 	char version;

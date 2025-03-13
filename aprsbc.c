@@ -17,6 +17,8 @@
  * module, might as well isolate the BC stuff to it's own
  * source module. Easier to maintain it that way ...
  *
+ * 21Oct2024, Maiko (VE4KLM), no more hardcoded RF beacons, use the
+ * newly enhanced 'ax25 bc' command with 'at' command as a timer !
  */
 
 #include "global.h"
@@ -24,6 +26,8 @@
 #ifdef	APRSD
 
 #include "aprs.h"
+
+#define NEW_AX_BC       /* 21Oct2024, Maiko (VE4KLM), more flexibility */
 
 #define	MAXBCSTRS	4
 
@@ -126,7 +130,10 @@ int doaprsbc (int argc, char *argv[], void *p OPTIONAL)
  */
 
 /* 27Nov2001, Maiko, Separate timers now for RF and INET broadcasts */
-static struct timer aprs_inetid_t, aprs_rfid_t;
+static struct timer aprs_inetid_t;
+#ifndef	NEW_AX_BC /* 21Oct2024, Maiko (VE4KLM) - use 'ax25 bc' with 'at' */
+static struct timer aprs_rfid_t;
+#endif
 
 #ifndef	APRSC
 
@@ -216,6 +223,8 @@ static void inetident (void *t OPTIONAL)
 }
 
 #endif	/* end of APRSC */
+
+#ifndef	NEW_AX_BC /* 21Oct2024, Maiko (VE4KLM) - use 'ax25 bc' with 'at' */
 
 /*
  * 27Nov2001, Maiko, Separate functions now for INET and RF
@@ -312,6 +321,8 @@ static void rfident (void *t OPTIONAL)
 
 }
 
+#endif	/* NEW_AX_BC */
+
 #ifndef	APRSC
 
 /*
@@ -353,8 +364,12 @@ void stopinetbc (void)
 
 #endif	/* end of APRSC */
 
+
 void startrfbc (void)
 {
+#ifdef	NEW_AX_BC /* 21Oct2024, Maiko (VE4KLM) - use 'ax25 bc' with 'at' */
+	log (-1, "use enhanced ax25 bc with at command for APRS rf beacons");
+#else
 	/* 28Nov2001, Only start timers if intervals are defined (ie, non zero) */
 	if (bc_timers[BC_RFTIMER])
 	{
@@ -367,12 +382,15 @@ void startrfbc (void)
 
 		rfident ((void*)0);	/* send one out now, don't wait for timer */
 	}
+#endif
 }
 
 /* 23Jan2002, Maiko, Function to stop bc timer */
 void stoprfbc (void)
 {
+#ifndef	NEW_AX_BC /* 21Oct2024, Maiko (VE4KLM) - use 'ax25 bc' with 'at' */
 	stop_timer (&aprs_rfid_t);
+#endif
 }
 
 #endif

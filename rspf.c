@@ -23,11 +23,15 @@
 #include "rspf.h"
   
 extern struct route *rt_lookup __ARGS((int32 target));
-  
-#ifdef  AX25
-extern struct lq *al_lookup __ARGS((struct iface *ifp,char *addr,int sort));
-#else
-static struct lq *al_lookup __ARGS((struct iface *ifp,char *addr,int sort));
+ 
+/*
+ * 07Feb2025, Maiko (VE4KLM), al_lookup() is already defined in ax25.h,
+ * and apparently Charles has RSPF defined in config.h, so better make
+ * sure to modify the al_lookup() for the new hgroup argument, in this
+ * case we simply do a lookup of current heard list - so just pass 0.
+ */
+#ifndef AX25
+static struct lq *al_lookup (struct iface*,char*,int, int);
 #endif  /* AX25 */
   
 struct rspf_stat Rspf_stat;
@@ -353,12 +357,14 @@ struct rspfadj *adj;
                 }
         /* We must now try to figure out from which AX.25 callsign this
          * packet came. Looking at the ARP table may sometimes help.
+	 *
+	 * 07Feb2025, Maiko (VE4KLM), added new hgroup arg to al_lookup ()
          */
                 if(oldadj->seq != 0 && adj->seq != 0 &&
                     (riface = rtif_lookup(adj->addr)) != NULLRIFACE &&
                     (atp = arp_lookup(ARP_AX25,adj->addr,riface->iface)) != NULLARP &&
                     atp->state == ARP_VALID &&
-                (alp = al_lookup(riface->iface,atp->hw_addr,0)) != NULLLQ){
+                (alp = al_lookup(riface->iface,atp->hw_addr,0,0)) != NULLLQ){
         /* The wrapping of the modulus is taken into account here */
                     if(oldadj->seq > (MAXINT16 - 100) && adj->seq < 100)
                         origdif = adj->seq + MAXINT16 - oldadj->seq;
@@ -1908,12 +1914,14 @@ int *resbits;           /* Significant bits of resulting route */
 #ifndef AX25
 /*
  * Dummy stub for RSPF if AX25 is not configured.
+ * 07Feb2025, Maiko, New hgroup argument recently added
  */
 static struct lq *
-al_lookup(ifp,addr,sort)
+al_lookup(ifp,addr,sort, hgroup)
 struct iface *ifp;
 char *addr;
 int sort;
+int hgroup;
 {
     return NULLLQ;
 }

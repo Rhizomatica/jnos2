@@ -1,0 +1,17 @@
+
+ax25 bbscall ve4klm
+
+attach axip ax0 256 1.1.1.1
+attach axip ax1 256 2.1.1.1
+attach axip ax2 256 3.1.1.1
+
+ifconfig ax0 ax25 bctext "original preconfigured text"
+
+trace ax0 0x211
+
+at now+0010 "ax25 bc ax0 APN20P \"=4953.22NI09718.35W& #utc utc\"+"
+
+ax25 bc ax0
+
+# watch the F9 window for trace data
+

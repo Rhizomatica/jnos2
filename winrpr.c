@@ -122,19 +122,6 @@ static int connectwinrpr (IFPAGWPE *ifpp)
 	return s;
 }
 
-/*
- * 10Jan2023, Maiko (VE4KLM), need this for any kiss attachments
- *
- * 14Jan2023, Maiko, the additional kiss interfaces made assumptions
- * that the devices were physical ASY devices, therefore this stub.
- */
-int winrpr_send_stub (int dev, struct mbuf *bp)
-{
-	struct iface dummy;
-
-	winrpr_send (&dummy, bp);
-}
-
 int winrpr_send (struct iface *iface, struct mbuf *bp)
 {
 	static char *iobuf = NULL;
@@ -176,6 +163,21 @@ int winrpr_send (struct iface *iface, struct mbuf *bp)
 	}
 
     return 0;
+}
+
+/*
+ * 10Jan2023, Maiko (VE4KLM), need this for any kiss attachments
+ *
+ * 14Jan2023, Maiko, the additional kiss interfaces made assumptions
+ * that the devices were physical ASY devices, therefore this stub.
+ *
+ * 23Jun2024, Maiko, Have to move this stub down here - gcc-14 is picky
+ */
+int winrpr_send_stub (int dev, struct mbuf *bp)
+{
+	struct iface dummy;
+
+	return winrpr_send (&dummy, bp);
 }
 
 /*

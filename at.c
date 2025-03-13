@@ -13,8 +13,11 @@
  *           - bug fix June 2, 1993
  *           - merged changes into Johan's new code June 14, 1993
  *
- * May 2021, Maiko (VE4KLM) - stability mods !
+ * May 20, 2021, Maiko (VE4KLM) - stability mods (reverted May 2024)
  *
+ * May 19, 2024, Maiko, I believe the AT loop issue is fixed. Reverted my
+ *               changes to the recur variable. It had nothing to do with
+ *               these AT loop problems, and using malloc() is expensive.
  */
 #include <time.h>
 #ifdef MSDOS
@@ -53,8 +56,13 @@ struct at_list {
  * I think I will use a pointer here and just alloc the memory as needed.
  *
     char   recur[10];
+ *
+ * 19May2024, Reverting back to original static buffer, in the end, this had
+ *            bugger all to do with the AT looping problem, live and learn.
+ *
+    char *recur;
  */
-    char *recur;	/* used in recursive 'at' commands*/
+    char   recur[10];	/* original recur recode is fine, 19May2024 */
 
     unsigned int id;    /* numerical 'id' of this 'at' */
 };
@@ -143,8 +151,11 @@ void *p;
                     else {
                         pp->next=loe->next;
                     }
+/* 19May2024, Maiko, Reverting to original code */
+#ifdef DONT_COMPILE
 		    if (loe->recur)			/* 20May2021, Maiko */
 			free (loe->recur);
+#endif
                     free(loe);
                     tprintf("at id: %u--Killed.\n",tid);
                     notf=0;
@@ -339,9 +350,14 @@ void *p;
    /*
     * 20May2021, Maiko (VE4KLM), this is a pointer now
     *
-    loe->recur[0] = 0;
+       loe->recur[0] = 0;
+    *
+    * 19May2024, Maiko, Reverting back to original variable
+    *
+       loe->recur = (char*)0;
     */
-    loe->recur = (char*)0;
+
+    loe->recur[0] = 0;	/* 19May2024, Maiko, back to original code */
 
     if(argv[2][strlen(argv[2])-1] == '+')
     {
@@ -349,9 +365,14 @@ void *p;
 	 * 20May2021, Maiko (VE4KLM)
 	 * replace static member with allocated pointer
 	 *
-	 * strcpy(loe->recur,argv[1]);
+	   strcpy(loe->recur,argv[1]);
+	 *
+	 * 19May2024, Maiko, Back to the original code
+	 *
+	   loe->recur = j2strdup (argv[1]);
 	 */
-	loe->recur = j2strdup (argv[1]);
+
+	strcpy(loe->recur,argv[1]);
         strcat(t->arg,"+");
     }
     loe->at_timer=t;
@@ -379,7 +400,7 @@ atproc(int i,void *p1,void *p2)
     extern struct cmds DFAR Cmds[];
     char *command;
     struct at_list *loe, *p;
-    int recur, id, safety = 0;
+    int recur, id;
     char *pp;
     char *cmd=NULLCHAR;
   
@@ -405,22 +426,33 @@ atproc(int i,void *p1,void *p2)
     p=Head_loe;
     loe=Head_loe;
     while(loe != NULLATLIST){
-        if(loe->at_timer->state == TIMER_EXPIRE){
-            if((int)loe->id != id)
-            {
-				if (safety++ > 10)
-					log (-1, "possible AT loop ? list id %d id %d", (int)(loe->id), id);
-
-				if (safety++ > 15)
-				{
-					log (-1, "breaking out AT loop");
-					break;
-				}
-
-                continue; /* is this the proper entry? */
-            }
-			safety = 0;
-
+/*
+ * 18May2024, Maiko (VE4KLM), This is wrong. The use of continue
+ * will just create an infinite loop as I've already discovered,
+ * which is why the safety code (2021) was put in, which in hind
+ * site was useless. I should have seen this back then, oh well.
+ *
+ * Did nobody else run into this back in the JNOS 1.11f days ?
+ *
+ * I think what happens is if you have multiple expires falling
+ * on the same time, you may get probabilistically unlucky, with
+ * the first entry in the list not matching up with the current
+ * command id. This is just a consequence of timer precision ?
+ *
+ * I do a lot of 'at now+00nn' type commands, and they are bound
+ * to overlap every now and then, sometimes they're fine, other
+ * time's it goes into a loop, could be hours, could be weeks.
+ *
+        if(loe->at_timer->state == TIMER_EXPIRE) << left curly brace >>
+            if(loe->id != id) continue;
+ *
+ */
+#ifdef	AT_DEBUG
+		log (-1, "list timer state %d list id %d curr cmd id %d recur %d",
+				loe->at_timer->state, loe->id, id, recur);
+#endif
+        if ((loe->at_timer->state == TIMER_EXPIRE) && (loe->id == id))
+		{
             if(recur)
             {	
 		/*
@@ -428,35 +460,58 @@ atproc(int i,void *p1,void *p2)
 		 * I also noticed they didn't account for a string termination,
 		 * and asking myself why the trailing space (leave it for now).
 		 *
-                char prefix[sizeof(loe->recur)+4];
+                   char prefix[sizeof(loe->recur)+4];
+		 *
+		 * 19May2024, Maiko, Reverting back to original code
+		 *
+		   char *prefix = mallocw (strlen (loe->recur) + 5);
 		 *
 		 */
-		char *prefix = mallocw (strlen (loe->recur) + 5);
+                char prefix[sizeof(loe->recur)+5];
                 sprintf(prefix, "at %s ", loe->recur);
-		// log (-1, "prefix [%s]", prefix);
+#ifdef AT_DEBUG
+		log (-1, "recur [10] [%s] prefix [15] [%s]",
+			loe->recur, prefix);
+#endif
                 cmd=requote(command, prefix, "");
                 command[strlen(command)-1]=0;  /* kill the + */
+#ifdef AT_DEBUG
+		log (-1, "command [%s]", command);
 
-		free (prefix);	/* make sure of this, we don't need it anymore */
+#endif
+		/*
+		 * 19May2024, Maiko, Reverting back to original code
+		 *
+		free (prefix);
+		 */
             }
             free(loe->at_timer);    /* Free timer */
             if(loe == Head_loe){
                 Head_loe=loe->next;
                 p=loe->next;
+/* 19May2024, Maiko, Reverting to original code */
+#ifdef DONT_COMPILE
 		if (loe->recur)			/* 20May2021, Maiko */
 			free (loe->recur);
+#endif
                 free(loe);
                 loe=p;
                 p=Head_loe;
             } else {
                 p->next=loe->next;
+/* 19May2024, Maiko, Reverting to original code */
+#ifdef DONT_COMPILE
 		if (loe->recur)			/* 20May2021, Maiko */
 			free (loe->recur);
+#endif
                 free(loe);
                 loe=p->next;
             }
             break;  /* exit while loop */
-        } else {    /* Not expired, go on */
+        } else {    /* Not expired or not ours, go on */
+#ifdef	AT_DEBUG
+			log (-1, "not expired or not ours");
+#endif
             if(loe != Head_loe) p=p->next;
             loe=loe->next;
         }

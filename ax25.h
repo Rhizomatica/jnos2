@@ -200,7 +200,10 @@ struct lqentry {
     int32 count;        /* Count of packets heard from that station */
 };
 #define LQENTRY 11
-  
+
+/* 11Nov2024, Maiko (VE4KLM), Need to use this in aprsstat.c as well */ 
+extern char *get_hgroup_description (int hgroup);
+
 /* Link quality database record format
  * Currently used only by AX.25 interfaces
  */
@@ -210,7 +213,9 @@ struct lq {
     struct iface *iface;    /* Interface address was heard on */
     int32 time;     /* Time station was last heard */
     int32 currxcnt; /* Current # of packets heard from this station */
-  
+ 
+    int hgroup;	/* 06Nov2024, Maiko (VE4KLM), multiple heard lists */ 
+
 #ifdef  notdef      /* Not yet implemented */
     /* # of packets heard from this station as of his last update */
     int32 lastrxcnt;
@@ -237,6 +242,8 @@ struct ld {
     struct iface *iface;    /* Interface address was heard on */
     int32 time;     /* Time station was last mentioned */
     int32 currxcnt; /* Current # of packets destined to this station */
+
+    int hgroup;	/* 06Nov2024, Maiko (VE4KLM), multiple heard lists */ 
 };
 #define NULLLD  (struct ld *)0
   
@@ -252,6 +259,8 @@ struct lv {
     struct iface *iface;    /* Interface address was heard on */
     int32 time;     /* Time station was last mentioned */
     int32 currxcnt; /* Current # of packets destined to this station */
+
+    int hgroup;	/* 06Nov2024, Maiko (VE4KLM), multiple heard lists */ 
 };
 #define NULLLV  (struct lv *)0
  
@@ -307,7 +316,10 @@ void paxipdest __ARGS((struct iface *iface));
 
 /* In ax25cmd.c: */
 void st_ax25 __ARGS((struct ax25_cb *axp));
-int axheard __ARGS((struct iface *ifp));
+
+/* 23Nov2023, Maiko, added second argument, new multiple heard list */
+int axheard __ARGS((struct iface *ifp, int hgroup));
+
 void init_ifax25 __ARGS((struct ifax25 *));
 int connect_filt __ARGS((int argc,char *argv[],char target[],struct iface *ifp));
   
@@ -326,7 +338,9 @@ void logDigisrc (struct iface *ifp, char *addr, char *digiaddr);
 
 char *putlqentry __ARGS((char *cp,char *addr,int32 count));
 char *putlqhdr __ARGS((char *cp,int16 version,int32 ip_addr));
-struct lq *al_lookup __ARGS((struct iface *ifp,char *addr,int sort));
+
+/* 23Nov2024, Maiko, Adding yet another arg to prototopes for new hgroup */
+struct lq *al_lookup __ARGS((struct iface *ifp,char *addr,int sort, int hgroup));
   
 /* In ax25user.c: */
 

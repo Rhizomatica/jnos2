@@ -108,6 +108,8 @@ struct iface {
 #define BBS_ONLY       8192 /* BBS's only in mbox via this port */
 #define USERS_ONLY     16384 /* Users only on this port */
 #define SYSOP_ONLY     32768 /* Sysops only on this port */
+
+#define NO_IP_AX25     65536 /* No IP over AX25 - VE4KLM (April, 2024) */
   
 #ifdef NETROM
     int quality;            /* Netrom interface quality */

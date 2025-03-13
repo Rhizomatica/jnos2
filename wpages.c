@@ -288,7 +288,7 @@ char *trimup( char *cp )
   int len;
 
   if( *cp == '\0' )
-    return;
+    return cp;
   
   len = strlen( cp );
   ep = cp + len - 1;
@@ -301,7 +301,7 @@ char *trimup( char *cp )
   }
   
   if( *cp == '\0' )
-    return;
+    return cp;
   
   while( *cp == ' ' || *cp == '\t' )
     cp++;

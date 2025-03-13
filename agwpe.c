@@ -146,19 +146,6 @@ static int connectagwpe (IFPAGWPE *ifpp)
 	return s;
 }
 
-/*
- * 29Jan2023, Maiko (VE4KLM), need this for any kiss attachments
- *
- * Note - the additional kiss interfaces made assumptions that the
- * devices were physical ASY (serial) devices, therefore the stub.
- */
-int agwpe_send_stub (int dev, struct mbuf *bp)
-{
-	struct iface dummy;
-
-	agwpe_send (&dummy, bp);
-}
-
 int agwpe_send (struct iface *iface, struct mbuf *bp)
 {
 	static char *iobuf = NULL;
@@ -223,6 +210,21 @@ int agwpe_send (struct iface *iface, struct mbuf *bp)
 	}
 
     return 0;
+}
+
+/*
+ * 29Jan2023, Maiko (VE4KLM), need this for any kiss attachments
+ *
+ * Note - the additional kiss interfaces made assumptions that the
+ * devices were physical ASY (serial) devices, therefore the stub.
+ *
+ * 23Jun2024, Maiko, Have to move this down here, gcc-14 is picky
+ */
+int agwpe_send_stub (int dev, struct mbuf *bp)
+{
+	struct iface dummy;
+
+	return agwpe_send (&dummy, bp);
 }
 
 int agwpe_raw (struct iface *iface, struct mbuf *bp)

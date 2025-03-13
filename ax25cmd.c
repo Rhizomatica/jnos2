@@ -4,7 +4,11 @@
  * Mods by G1EMM
  * Mods by PA0GRI
  * Mods by N1BEE
+ *
+ * More flexible BC options - 16Oct2024, Maiko (VE4KLM)
+ *
  */
+
 /*
 ** FILE: ax25cmd.c
 **
@@ -17,7 +21,13 @@
 ** 27/09/91 Mike Bilow, N1BEE
 **    Added Filter command for axheard control
 */
+
+#define	NEW_AX_BC	/* 16Oct2024, Maiko (VE4KLM), more flexibility */
   
+#ifdef	NEW_AX_BC
+static char *naxbcnomore = "command removed - use \'at\' with new \'ax25 bc\' options instead\n";
+#endif
+
 #ifdef MSDOS
 #include <dos.h>
 #endif
@@ -48,7 +58,11 @@
 
 #include "j2strings.h"	/* 12Apr2021, Maiko */
   
-int axheard __ARGS((struct iface *ifp));
+/* 23Nov2023, Maiko, added second argument, new multiple heard list
+ * feature, BUT, there's already conflicting prototype in ax25.h !
+int axheard __ARGS((struct iface *ifp, int hgroup));
+ */
+
 static int doaxfilter __ARGS((int argc,char *argv[],void *p));
 static int doaxflush __ARGS((int argc,char *argv[],void *p));
 static int doaxirtt __ARGS((int argc,char *argv[],void *p));
@@ -57,6 +71,10 @@ static int doaxreset __ARGS((int argc,char *argv[],void *p));
 static int doaxroute __ARGS((int argc,char *argv[],void *p));
 int doaxstat __ARGS((int argc,char *argv[],void *p));
 static int dobc __ARGS((int argc,char *argv[],void *p));
+
+/* 24May2024, Maiko (VE4KLM), New flag to forbid IP over AX25 port */
+static int donoip (int argc, char **argv, void *p);
+
 static int dobcint __ARGS((int argc,char *argv[],void *p));
 static int dobcport __ARGS((int argc,char *argv[],void *p));
 static int dobctext __ARGS((int argc,char *argv[],void *p));
@@ -69,9 +87,15 @@ static int doax25xdigi (int argc, char **argv, void *p);
 #endif
 static int dobbscall __ARGS((int argc,char *argv[],void *p));
 int donralias __ARGS((int argc,char *argv[],void *p));
+#ifdef	NEW_AX_BC
+/* 16Oct2024, Maiko (VE4KLM), more options to cut code elsewhere */
+static void ax_bc (struct iface *axif, char *bcdest, char *bcdata);
+#else
 static void ax_bc __ARGS((struct iface *axif));
-static int axdest __ARGS((struct iface *ifp));
-static int avdest __ARGS((struct iface *ifp));	/* 05Apr2021, Maiko (VE4KLM) new digi'd calls */
+#endif
+/* 28Nov2024, Maiko, Adding hgroup arg to both axdest and avdest calls */
+static int axdest __ARGS((struct iface *ifp, int hgroup));
+static int avdest __ARGS((struct iface *ifp, int hgroup));	/* 05Apr2021, Maiko (VE4KLM) new digi'd calls */
 #ifdef TTYCALL
 static int dottycall __ARGS((int argc, char *argv[], void *p));
 #endif
@@ -113,7 +137,10 @@ extern char tncall[AXALEN];  /* the telnet link call in 'call' form */
 extern int axheard_filter_flag;     /* in axheard.c */
 /* Defaults for IDing. */
 char *axbctext;     /* Text to send */
+
+#ifndef NEW_AX_BC /* 16Oct2024, Maiko (VE4KLM), no more internal timers */
 static struct timer Broadtimer; /* timer for broadcasts */
+#endif
   
 #ifdef	AX25_XDIGI
 extern int ax25_addxdigi (char*, char*, char*, char*);
@@ -162,6 +189,10 @@ static struct cmds DFAR Axcmds[] = {
     { "maxframe",     domaxframe,     0, 0, NULLCHAR },
     { "maxwait",      doaxmaxwait,    0, 0, NULLCHAR },
     { "mycall",       domycall,       0, 0, NULLCHAR },
+
+ /* 24May2024, Maiko (VE4KLM), New flag to forbid IP over AX25 port */
+    { "noip",           donoip,      0, 0, NULLCHAR },
+
     { "paclen",       dopaclen,       0, 0, NULLCHAR },
     { "pthresh",      dopthresh,      0, 0, NULLCHAR },
     { "reset",    doaxreset,      0, 2, "ax25 reset <axcb> | <remote call>" },
@@ -230,16 +261,10 @@ void *p;
 #endif
     return 0;
 }
-  
-/*
-** This function is called to send the current broadcast message
-** and reset the timer.
-*/
-  
-static int dobc(argc,argv,p)
-int argc;
-char *argv[];
-void *p;
+
+/* 24May2024, Maiko (VE4KLM), new flag to disable IP on ax25 ports */
+
+static int donoip (int argc, char **argv, void *p)
 {
     struct iface *ifa;
   
@@ -254,15 +279,128 @@ void *p;
     else if (ifa->type != CL_AX25)
         j2tputs("not an AX.25 interface\n");
     else
+	{
+		ifa->flags ^= NO_IP_AX25;	/* new bit added */
+
+		/* 02Jun2024, Maiko, Aggggg, fixed bad typo, & NOT &= ! */
+		if (ifa->flags & NO_IP_AX25)
+    		tprintf ("ip NOT allowed on this interface\n");
+		else
+    		tprintf ("ip IS allowed on this interface\n");
+	}
+
+    return 0;
+}
+
+/*
+** This function is called to send the current broadcast message
+** and reset the timer.
+*
+* 16Oct2024, Maiko (VE4KLM), more flexible now, able to change destination
+* call and give a direct string to bypass preconfigured iface bctext vals.
+*
+   jnos> ax25 bbscall VE4KLM
+   jnos> ifconfig ax0 ax25 bctext "original preconfigured text"
+   jnos> ax25 bc ax0
+   jnos> ax25 bc ax0 APN20P
+   jnos> ax25 bc ax0 APN20P "=4953.22NI09718.35W& #utc utc"
+*
+   Wed Oct 16 11:12:47 2024 - ax0 sent:
+   AX25: VE4KLM->ID UI pid=Text
+   0000  92 88 40 40 40 40 e0 ac 8a 68 96 98 9a 61 03 f0  ..@@@@`,.h...a.p
+   0010  6f 72 69 67 69 6e 61 6c 20 70 72 65 63 6f 6e 66  original preconf
+   0020  69 67 75 72 65 64 20 74 65 78 74                 igured text
+
+   Wed Oct 16 10:54:13 2024 - ax0 sent:
+   AX25: VE4KLM->APN20P UI pid=Text
+   0000  82 a0 9c 64 60 a0 e0 ac 8a 68 96 98 9a 61 03 f0  . .d` `,.h...a.p
+   0010  6f 72 69 67 69 6e 61 6c 20 70 72 65 63 6f 6e 66  original preconf
+   0020  69 67 75 72 65 64 20 74 65 78 74                 igured text
+
+   Wed Oct 16 10:52:49 2024 - ax0 sent:
+   AX25: VE4KLM->APN20P UI pid=Text
+   0000  82 a0 9c 64 60 a0 e0 ac 8a 68 96 98 9a 61 03 f0  . .d` `,.h...a.p
+   0010  3d 34 39 35 33 2e 32 32 4e 49 30 39 37 31 38 2e  =4953.22NI09718.
+   0020  33 35 57 26 20 31 35 35 32 20 75 74 63           35W& 1552 utc
+*
+* The whole point is to get rid of the internal timers, there is code all
+* over JNOS that is basically duplicate of other code, instead, make use
+* of the ultimate timer, the 'at' command in combo with these new opts.
+*
+   jnos> at now+0020 "ax25 bc ax0 APN20P \"=4953.22NI09718.35W& #utc utc\"+"
+*
+* The APRS broadcasts for instance are no longer useful, perhaps they never
+* were when I first wrote the APRS routines way back, so this is one way to
+* replace the entire RF broadcast code for the APRS functionality ?
+*
+*/
+
+static int doaxbcusage (); /* 16Oct2024, Maiko, Might as well add this :) */
+
+static int dobc(argc,argv,p)
+int argc;
+char *argv[];
+void *p;
+{
+    struct iface *ifa;
+
+#ifdef	NEW_AX_BC
+    char *bcdest, *bcdata;
+#endif
+  
+    if (argc < 2)
     {
+		return doaxbcusage ();	/* 16Oct2024, Maiko, NEW usage file */
+
+        // tprintf("you need to specify an interface\n");
+        // return 1;
+    }
+
+#ifdef	NEW_AX_BC
+
+	bcdest = bcdata = NULL;		/* 03Feb2025, Maiko, change around a bit */
+
+	if (argc > 2)
+	{
+		bcdest = malloc(AXALEN);
+
+   		if(setcall(bcdest,argv[2]) == -1)
+		{
+        		tprintf("not a valid callsign\n");
+				free (bcdest);
+        		return 1;
+		}
+
+		if (argc > 3)
+			bcdata = j2strdup (argv[3]);
+	}
+#endif
+  
+    if((ifa=if_lookup(argv[1])) == NULLIF)
+        tprintf(Badinterface,argv[1]);
+    else if (ifa->type != CL_AX25)
+        j2tputs("not an AX.25 interface\n");
+    else
+    {
+#ifdef	NEW_AX_BC
+/*
+ * 16Oct2024, Maiko (VE4KLM), more options to cut down JNOS code,
+ * but also no more internal timers, use 'at' command instead !
+ */
+        ax_bc(ifa, bcdest, bcdata);
+
+		if (bcdest) free (bcdest);	/* 03Feb2025, oops, forgot this one */
+
+		if (bcdata) free (bcdata);	/* important to do this ! */
+#else
         ax_bc(ifa);
+
         stop_timer(&Broadtimer) ;       /* in case it's already running */
         start_timer(&Broadtimer);               /* and fire it up */
+#endif
     }
     return 0;
 }
-  
-  
   
 /*
 ** View/Change the message we broadcast.
@@ -301,6 +439,14 @@ int argc;
 char *argv[];
 void *p;
 {
+#ifdef	NEW_AX_BC
+/*
+ * 16Oct2024, Maiko (VE4KLM), more options to cut code elsewhere
+ * 21Oct2024, Maiko, use global char string, needed multiple places,
+ * to indicate to the sysop this command is not supported anymore.
+ */
+    tprintf ("%s", naxbcnomore);
+#else
     void dobroadtick __ARGS((void));
   
     if(argc < 2)
@@ -316,6 +462,7 @@ void *p;
     Broadtimer.arg = NULLCHAR;              /* dummy value */
     set_timer(&Broadtimer,(uint32)atoi(argv[1])*1000);     /* set timer duration */
     start_timer(&Broadtimer);               /* and fire it up */
+#endif
     return 0;
 }
   
@@ -326,7 +473,17 @@ int argc;
 char *argv[];
 void *p;
 {
+#ifdef	NEW_AX_BC
+/*
+ * 21Oct2024, Maiko, use global char string, needed multiple places,
+ * to indicate to the sysop this command is not supported anymore.
+ */
+    tprintf ("%s", naxbcnomore);
+
+    return 1;
+#else
     return setflag(argc,argv[1],AX25_BEACON,argv[2]);
+#endif
 }
   
 int Maxax25heard;
@@ -350,6 +507,11 @@ void *p;
     return setflag(argc,argv[1],LOG_AXHEARD,argv[2]);
 }
   
+#ifndef	NEW_AX_BC
+/*
+ * 16Oct2024, Maiko (VE4KLM), new ax25 bc options and at command, so we don't
+ * need these internal commands anymore, much more flexible, see line 29 !
+ */
 void
 dobroadtick()
 {
@@ -360,38 +522,111 @@ dobroadtick()
     while (ifa != NULL)
     {
         if (ifa->flags & AX25_BEACON)
+#ifdef	NEW_AX_BC
+	/*
+	 * 16Oct2024, Maiko, Make sure 'old school' way still works
+	 * 21Oct2024, Maiko, will never get called now, but be consistent with
+	 * the function definition
+     */
+            ax_bc(ifa, NULL, NULL);
+#else
             ax_bc(ifa);
+#endif
         ifa = ifa->next;
     }
   
     /* Restart timer */
     start_timer(&Broadtimer) ;
 }
-  
-  
-  
+#endif	/* end of NEW_AX_BC */
+
 /*
-** This is the low-level broadcast function.
-*/
+ * This is the low-level broadcast function.
+ *
+ * 07Sep2024, Maiko (VE4KLM), New '#utc' tag for ax25 bctext string
+ *  (you can now include a timestamp in your 'ax25 bc' broadcast)
+ *  
+ *  Examples (globals and/or per interface):
+ *
+ *   ax25 bctext "winnipeg #utc UTC"
+ *
+ *   ifconfig teensy ax25 bctext "winnipeg rpr #utc utc"
+ *
+ * 16Oct2024, Maiko (VE4KLM), More options so we can cut a lot of simplist
+ * and duplicated code within JNOS, and instead use the 'at' * command as
+ * the ultimate timer code with a more flexible 'ax25 bc' command ...
+ *
+ *   ax25 bc < iface > [ destination call ] [ broadcast data ]
+ *
+ * Read the new commentary given for dobc() JNOS command, around line 29
+ *
+ */
   
+#ifdef	NEW_AX_BC
+static void ax_bc(struct iface *axiface, char *bcdest, char *bcdata)
+#else
 static void ax_bc(axiface)
 struct iface *axiface;
+#endif
 {
+    char *tmacro, *sptr, *dptr;
     struct mbuf *hbp;
+    struct tm *tm;
+    long nowtime;
     int i;
-  
+#ifdef	NEW_AX_BC
+    char *datap = axiface->ax25->bctext;
+    if (bcdata) datap = bcdata;
+#endif
+
     /* prepare the header */
     i = 0;
-    if(axiface->ax25->bctext)
-        i = strlen(axiface->ax25->bctext);
+    if(datap)
+    {
+        i = strlen(datap);
+
+        tmacro = strstr (datap, "#utc");
+
+        /* no need to increment 'i' since HHMM takes up same space */
+    }
+
     if((hbp = alloc_mbuf(i)) == NULLBUF)
         return;
   
     hbp->cnt = i;
     if(i)
-        memcpy(hbp->data,axiface->ax25->bctext,i);
+    {
+        if (tmacro)
+        {
+            time(&nowtime);       /* current time */
+
+            tm = gmtime(&nowtime);
+
+            dptr = hbp->data;
+            sptr = datap;
+            while (sptr < tmacro)
+                *dptr++ = *sptr++;
+            dptr += sprintf (dptr, "%02d%02d", tm->tm_hour, tm->tm_min);
+            sptr += 4;  /* skip over the macro */
+            while (*sptr)
+                *dptr++ = *sptr++;
+	/*
+	 * 03Feb2025, Maiko (VE4KLM), I think the string termination should not
+	 * be there, since it will never get sent out, and it will overflow the
+	 * value of hbp->cnt (i) - this might be reason for latest instability,
+	 * so do NOT put the string terminator on here, crossing my fingers.
+	 */
+            /* *dptr = 0; you MUST terminate the string */
+        }
+        else memcpy(hbp->data,datap,i);
+    }
   
+#ifdef	NEW_AX_BC
+  /* 16Oct2024, Maiko (VE4KLM), use this for all types of broadcasts */
+    (*axiface->output)(axiface, bcdest ? bcdest : Ax25multi[IDCALL],
+#else
     (*axiface->output)(axiface, Ax25multi[IDCALL],
+#endif
 #ifdef MAILBOX
     (axiface->ax25->bbscall[0] ? axiface->ax25->bbscall : axiface->hwaddr),
 #else
@@ -415,14 +650,192 @@ static int doaxhusage ()
 
 	return 1;
 }
-  
+
+/* 16Oct2024, Maiko, NEW usage file for 'ax25 bc' now that new opts added */
+static int doaxbcusage ()
+{
+	getusage ("ax25", "bc");
+
+	return 1;
+}
+
+/*
+ * 06Nov2024, Maiko (VE4KLM), Need a simple way to save the heard list
+ * group descriptions, just showing a hash in the ax25 heard is of no
+ * help, not terribly user friendly, so here we go again. Probably have
+ * a function I could use, but nothing comes to mind, so make another.
+ *
+ * 20Nov2024, Maiko, The way I have this structured, means I need to
+ * also track the iface if I am able to do things like 'ax25 h all',
+ * or 'ax25 h 20m' where 20m is a heard group, not a real 'iface'.
+ */
+
+struct axhgd {
+    struct axhgd *next;
+    char *desc;
+	struct iface *ifc;	/* 20Nov2024, Maiko */
+	int hgroup;
+
+ /* 03Mar2025, Maiko, Display MUST be accurate - need to track this !!! */
+	char *hwaddr;
+	int32 rawsndcnt;
+	int32 lastsent;
+};
+
+#define NULLAXHGD (struct axhgd*)0
+
+static struct axhgd *axhgdlist = NULLAXHGD;
+
+/*
+ * 05Dec2024, Maiko, I need a function to tell me if the passed
+ * interface name is actually a heard group, not an interface.
+ */
+struct axhgd *anhgroup (char *desc)
+{
+	struct axhgd *ptr = axhgdlist;
+
+	// log (-1, "looking for hgroup %s", desc);
+
+	while (ptr)
+	{
+		// log (-1, "%d %s", ptr->hgroup, ptr->desc);
+
+		if (!strcmp (ptr->desc, desc))
+			break;
+
+		ptr = ptr->next;
+	}
+/*
+	if (ptr)
+		log (-1, "done, pointing to %d %s", ptr->hgroup, ptr->desc);
+	else
+		log (-1, "nothing found");
+*/
+	return ptr;
+}
+
+/* 23Nov2024, Maiko, Need this function in axheard for the axhload, so no static */
+int add_hgroup_description (char *desc, struct iface *ifc)
+{
+	/* 20Nov2024, Maiko, need to also pass iface to this function */
+
+	struct axhgd *ptr = axhgdlist;
+
+	extern unsigned fnv1ahash (char*);	/* 27Jan2025, Maiko, fnvhash.o */
+
+	/* there is no group description for regular ops, just catch it here */
+	if (!strcmp (desc, "reset") || !strcmp (desc, "default"))
+		return 0;
+
+	/*
+	 * 05Dec2024, Maiko, use new function, cuts down dupe code
+	 * 03Mar2025, Maiko, oooohhh, mistake, I should be setting
+	 * ptr from the return value, I wasn't, so any attempt to
+	 * create a new hgroup always pointed to the most recent.
+	 *
+	if (!anhgroup (desc))
+	 */
+
+	if (!(ptr = anhgroup (desc)))
+	{
+		log (-1, "adding to list");
+
+		ptr = mallocw (sizeof(struct axhgd));
+
+		/*
+		 * 18Nov2024, Maiko, see my comments in axheard.c ...
+		 */
+		ptr->desc = j2strdup (desc);
+
+		/* 27Jan2025, Maiko, new hash function (fnvhash.o), not even sure
+		 * why I started using nrhash () in my prototype version, lazy ?
+		 */
+		ptr->hgroup = fnv1ahash (ptr->desc);
+
+		ptr->ifc = ifc;	/* 20Nov2024, Maiko, Need 4 extended hgroup listings */
+
+		/* 03Mar2025, Maiko, Need to save interface call for display */
+		ptr->hwaddr = mallocw(AXALEN);
+		memcpy (ptr->hwaddr, ifc->hwaddr, AXALEN);
+		{
+    			char tmp[AXBUF];
+    			log (-1, "%s", pax25(tmp,ptr->hwaddr));
+		}
+
+		if (axhgdlist == NULLAXHGD)
+		{
+			ptr->next = NULLAXHGD;
+
+			axhgdlist = ptr;
+		}	
+		else
+		{
+			ptr->next = axhgdlist;
+
+			axhgdlist = ptr;
+		}
+	}
+
+	/* using a hash means we don't have to track index or offsets to list */
+
+	return ptr->hgroup;
+}
+
+struct axhgd *get_hgroup_info (int hgroup)
+{
+	struct axhgd *ptr = axhgdlist;
+
+	while (ptr)
+	{
+		if (ptr->hgroup == hgroup)
+			break;
+
+		ptr = ptr->next;
+	}
+
+	return ptr;
+}
+
+char *get_hgroup_description (int hgroup)
+{
+	struct axhgd *ptr = axhgdlist;
+
+	// log (-1, "looking for hgroup %d", hgroup);
+
+	while (ptr)
+	{
+		// log (-1, "%d %s", ptr->hgroup, ptr->desc);
+
+		if (ptr->hgroup == hgroup)
+			break;
+
+		ptr = ptr->next;
+	}
+/*
+	if (ptr)
+		log (-1, "done, pointing to %d %s", ptr->hgroup, ptr->desc);
+	else
+		log (-1, "nothing found");
+*/
+	if (ptr)
+		return ptr->desc;
+
+	else
+	{
+		tprintf ("should never happen\n");
+		return "???";
+	}
+}
+
 int doaxheard (int argc, char **argv, void *p)
 {
     struct iface *ifp;
 
-	int digid; /* 05Apr2021, Maiko (VE4KLM), new */
+	int digid; /* 05Apr2021, Maiko, new */
 
 	char *fileptr;	/* 12Apr2021, Maiko (VE4KLM), now specify backup file */
+
+	struct axhgd *ptr;	/* 28Nov2024, Maiko */
 
 	if (argc < 2)
 		return doaxhusage ();
@@ -467,15 +880,18 @@ int doaxheard (int argc, char **argv, void *p)
 	 * and bands throughout the course of the day ? It would be nice to be able
  	 * to switch to a dedicated heard list for a particular frequency or band.
 	 *
-	 * For this prototype, an example syntax is 'ax25 h new=17m rp0'
+	 * 06Nov2024, Maiko (VE4KLM), revisiting this, finally have a prototype !
 	 *
-	 * Which would create a heardlist called rp0_17m, and you can create as
-	 * many new heardlists as you like for the same interface. To switch to
-	 * any of the heardlists, you would use the same command again. They're
-	 * created the first time IF they don't exist already, that's the idea.
+	 * To create or switch to another heard list group for a port, example :
 	 *
+	 *   ax25 h group=XXX rp0
+	 *
+	 *  where XXX is a description - like 17m, 30m, 10m, vhf, whatever
+	 *
+	 * To return to the default heard list, use XXX = reset or XXX = default
+	 *   (if you're not using multiple heard lists, then nothing to do)
 	 */
-	if (!strcmp (argv[1], "new="))
+	if (!strncmp (argv[1], "group=", 6))
 	{
 		if (argc > 2)
 		{
@@ -484,21 +900,42 @@ int doaxheard (int argc, char **argv, void *p)
 				tprintf (Badinterface, argv[2]);
 				return 1;
 			}
+		/*
+		 * 06Nov2024, Maiko (VE4KLM), use hash function, then we don't have
+		 * to come up with a mapping table to associate a group description
+		 * to what basically amounts to an index - new 'hgroup' struct var.
+		 *  (use nrhash for now, convenient, and exists already, int16)
+		 *
+		 * 20Nov2024, Maiko, Need iface for extended hgroup listing, added arg
+		 *
+		 * 27Jan2025, Maiko, redid my hash stuff - new fnvhash.o module !
+		 */
+			ifp->ax25->hgroup = add_hgroup_description (argv[1] + 6, ifp);
 
-			tprintf ("new command coming - multiple heard lists for a single port\n"); 
+			// log (-1, "setting hash value %d\n", ifp->ax25->hgroup);
 
-			/* this is just a frame work, feature is in the works */
 		}
 		else return doaxhusage ();
 	}
 
-	else if (!strcmp (argv[1], "dest") || digid)	/* 05Apr2021, Maiko, looking for digi'd calls */
+	else if (!strcmp (argv[1], "dest") || digid) /* 05Apr2021, Maiko, looking for digi'd calls */
 	{
 		if (argc > 2)
 		{
 			if (strcmp (argv[2], "all"))
 			{
-				if ((ifp = if_lookup (argv[2])) == NULLIF)
+				/* 05Dec2024, Maiko, Ability to now show a heard group */
+				if ((ptr = anhgroup (argv[2])))
+				{
+					if (digid)
+						avdest(ptr->ifc, ptr->hgroup);
+					else
+						axdest(ptr->ifc, ptr->hgroup);
+
+					return 0;
+				}
+
+				else if ((ifp = if_lookup (argv[2])) == NULLIF)
 				{
 					tprintf (Badinterface, argv[2]);
 					return 1;
@@ -510,11 +947,37 @@ int doaxheard (int argc, char **argv, void *p)
 					return 1;
 				}
 
-				/* 05Apr2021, Maiko (VE4KLM), new digi'd source list feature */
+				/* 29Nov2024, Maiko, Show default heard list first */
+
 				if (digid)
-					avdest(ifp);
+					avdest(ifp, 0);
 				else
-					axdest(ifp);
+					axdest(ifp, 0);
+
+				/* 05Dec2024, Maiko, maybe use a flag to include any heard groups */
+				if (argc > 3 && !strncmp (argv[3], "+h", 2))
+				{
+
+				/*
+				 * 05Apr2021, Maiko (VE4KLM), new digi'd source list feature
+				 * 29Nov2024, Maiko, Loop through any heard groups for iface
+			 	 */
+					ptr = axhgdlist;
+
+					while (ptr)
+					{
+						if (ptr->ifc == ifp)
+						{
+
+							if (digid)
+								avdest(ifp, ptr->hgroup);
+							else
+								axdest(ifp, ptr->hgroup);
+						}
+
+						ptr = ptr->next;
+					}
+				}
 
 				return 0;
 			}
@@ -525,17 +988,55 @@ int doaxheard (int argc, char **argv, void *p)
 					if (ifp->output != ax_output)
 						continue;	/* Not an ax.25 interface */
 
-					/* 05Apr2021, Maiko (VE4KLM), new digi'd source list feature */
+			/* 05Apr2021, Maiko (VE4KLM), new digi'd source list feature */
+
+			/* 28Nov2024, Maiko, Show primary heard list first ! */
+
 					if (digid)
 					{
-						if(avdest(ifp) == EOF)
+				 /* 28Nov2024, Maiko, new hgroup args, multiple heard lists */
+						if(avdest(ifp, 0) == EOF)
 							break;
 					}
 					else
 					{
-						if(axdest(ifp) == EOF)
+				 /* 28Nov2024, Maiko, new hgroup args, multiple heard lists */
+						if(axdest(ifp, 0) == EOF)
 							break;
 					}
+
+				/* 05Dec2024, Maiko, maybe use a flag to include any heard groups */
+				if (argc > 3 && !strncmp (argv[3], "+h", 2))
+				{
+
+		/* 28Nov2024, Maiko, Loop through any heard groups for this iface */
+
+					ptr = axhgdlist;
+
+					while (ptr)
+					{
+						if (ptr->ifc == ifp)
+						{
+
+							if (digid)
+							{
+				 /* 28Nov2024, Maiko, new hgroup args, multiple heard lists */
+								if(avdest(ifp, ptr->hgroup) == EOF)
+									break;
+							}
+							else
+							{
+				/* 28Nov2024, Maiko, new hgroup args, multiple heard lists */
+								if(axdest(ifp, ptr->hgroup) == EOF)
+									break;
+							}
+						}
+
+						ptr = ptr->next;
+					}
+
+				}		/* +h flag 05Dev2024 */
+
 				}
 			}
 		}
@@ -551,7 +1052,15 @@ int doaxheard (int argc, char **argv, void *p)
 		 */
 		if (strcmp (argv[1], "all"))
 		{
-			if ((ifp = if_lookup (argv[1])) == NULLIF)
+			/* 05Dec2024, Maiko, Ability to now show a heard group */
+			if ((ptr = anhgroup (argv[1])))
+			{
+				axheard (ptr->ifc, ptr->hgroup);
+
+				return 0;
+			}
+
+			else if ((ifp = if_lookup (argv[1])) == NULLIF)
 			{
 				tprintf (Badinterface, argv[1]);
 				return 1;
@@ -564,7 +1073,26 @@ int doaxheard (int argc, char **argv, void *p)
 			}
 
 			if (ifp->flags & LOG_AXHEARD)
-				axheard (ifp);
+			{
+				axheard (ifp, 0);
+
+		/* 28Nov2024, Maiko, Loop through any heard groups for this iface */
+
+				ptr = axhgdlist;
+
+			/* 05Dec2024, Maiko, maybe use a flag to include any heard groups */
+				if (argc > 2 && !strncmp (argv[2], "+h", 2))
+				while (ptr)
+				{
+					if (ptr->ifc == ifp)
+						axheard (ifp, ptr->hgroup);
+
+			/* ^^ 20Nov2024, new hgroup arg for the axheard() functions ^^ */
+
+					ptr = ptr->next;
+				}
+
+			}
 			else
 				j2tputs ("not active\n");
 		}
@@ -575,8 +1103,27 @@ int doaxheard (int argc, char **argv, void *p)
 				if (ifp->type != CL_AX25 || !(ifp->flags & LOG_AXHEARD))
 					continue;	/* Not an ax.25 interface */
 
-				if (axheard (ifp) == EOF)
+			/* 28Nov2024, Maiko, Show primary heard list first !!! */
+
+				if (axheard (ifp, 0) == EOF) /* 20Nov2024, new hgroup arg */
 					break;
+
+		/* 20Nov2024, Maiko, Loop through any heard groups for this iface */
+
+				ptr = axhgdlist;
+
+			/* 05Dec2024, Maiko, maybe use a flag to include any heard groups */
+				if (argc > 2 && !strncmp (argv[2], "+h", 2))
+				while (ptr)
+				{
+					if (ptr->ifc == ifp)
+						axheard (ifp, ptr->hgroup);
+
+			/* ^^ 20Nov2024, new hgroup arg for the axheard() functions ^^ */
+
+					ptr = ptr->next;
+				}
+
 			}
 		}
 	}
@@ -584,26 +1131,65 @@ int doaxheard (int argc, char **argv, void *p)
     return 0;
 }
 
-int
-axheard(ifp)
+int axheard(ifp, hgroup)
 struct iface *ifp;
+int hgroup; /* 20Nov2024, Maiko, New hgroup argument, 0 for default heard group */
 {
     int col = 0;
     struct lq *lp;
     char tmp[AXBUF];
 
+	struct axhgd *hgroupinfo;	/* 03Mar2025, Maiko, addition info needed */
+
     if(ifp->hwaddr == NULLCHAR)
         return 0;
+
+    j2tputs ("\n");  /* If you want less crowded listing - 07Sep2024 */
+
+	/* 06Nov2024, Maiko (VE4KLM), show 'active' heard list group id */
+
+    j2tputs("Interface  Station   Time since send  Pkts sent");
+
+   /* 23Nov2024, Maiko, Doing this REALLY simplies conditional further down */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
+
+ /*
+  * 23Nov2024, Maiko, Now use the new arg to go after specific heard group
+  * 03Mar2025, Maiko, I also need hwaddr and packet sent counts, so we might
+  * as well just use a new function to grab the entire hgroup information !
+  */
+    if (hgroup)
+	{
+		j2tputs ("  Hrd Group");
+
+		hgroupinfo = get_hgroup_info (hgroup);
+	}
+
+    tprintf("\n%-9s", ifp->name);
+
+	if (hgroup)
+	{
+    	tprintf("  %-9s   %12s    %7d   %s", pax25(tmp,hgroupinfo->hwaddr),
+   			tformat(secclock() - hgroupinfo->lastsent),
+				hgroupinfo->rawsndcnt, hgroupinfo->desc);
+	}
+	else
+	{
+    	tprintf("  %-9s   %12s    %7d", pax25(tmp,ifp->hwaddr),
+   			tformat(secclock() - ifp->lastsent),ifp->rawsndcnt);
+	}
   
-    j2tputs("Interface  Station   Time since send  Pkts sent\n");
-    tprintf("%-9s  %-9s   %12s    %7d\n",ifp->name,pax25(tmp,ifp->hwaddr),
-    tformat(secclock() - ifp->lastsent),ifp->rawsndcnt);
-  
-    j2tputs("Station   Time since heard Pkts rcvd : ");
+    j2tputs("\nStation   Time since heard Pkts rcvd : ");
     j2tputs("Station   Time since heard Pkts rcvd\n");
     for(lp = Lq;lp != NULLLQ;lp = lp->next){
         if(lp->iface != ifp)
             continue;
+
+ /* 23Nov2024, Maiko, Now use the new arg to go after specific heard group */
+	   if(lp->hgroup != hgroup)
+		continue;
+
         if(col)
             j2tputs("  : ");
 
@@ -627,8 +1213,9 @@ struct iface *ifp;
 }
 
 static int
-axdest(ifp)
+axdest(ifp, hgroup)
 struct iface *ifp;
+int hgroup; /* 28Nov2024, Maiko, new hgroup arg, multiple heard lists */
 {
     struct ld *lp;
     struct lq *lq;
@@ -636,19 +1223,38 @@ struct iface *ifp;
   
     if(ifp->hwaddr == NULLCHAR)
         return 0;
-    tprintf("%s:\n",ifp->name);
-    j2tputs("Station   Last ref         Last heard           Pkts\n");
+
+    j2tputs ("\n");  /* If you want less crowded listing - 30Sep2024 */
+
+   /* 29Nov2024, Maiko, Doing this REALLY simplies conditional further down */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
+
+    tprintf("%s:",ifp->name);
+
+	/* 11Nov2024, Maiko, should note the heard group if in effect
+	 * 29Nov2024, Maiko, Use hgroup var now simplifies the code
+	 */
+    if (hgroup)
+		tprintf (" %s Hrd Group", get_hgroup_description (hgroup));
+
+    j2tputs("\nStation   Last ref         Last heard           Pkts\n");
     for(lp = Ld;lp != NULLLD;lp = lp->next){
         if(lp->iface != ifp)
             continue;
+	/* 06Nov2024, Maiko, Only show entries for current heard group */
+	if(lp->hgroup != /* ifp->ax25->hgroup */ hgroup)
+		continue;
   
         tprintf("%-10s%-17s",
         pax25(tmp,lp->addr),tformat(secclock() - lp->time));
-  
+ 
+	/* 23Nov2024, Maiko, Adding new hgroup to al_lookup - fine tune */
+
         if(addreq(lp->addr,ifp->hwaddr)){
             /* Special case; it's our address */
             tprintf("%-17s",tformat(secclock() - ifp->lastsent));
-        } else if((lq = al_lookup(ifp,lp->addr,0)) == NULLLQ){
+        } else if((lq = al_lookup(ifp,lp->addr,0,hgroup)) == NULLLQ){
             tprintf("%-17s","");
         } else {
             tprintf("%-17s",tformat(secclock() - lq->time));
@@ -661,8 +1267,9 @@ struct iface *ifp;
 
 /*
  * 05Apr2021, Maiko (VE4KLM), shows digipeated source calls list
+ * 28Nov2024, Maiko, new hgroup arg, multiple heard lists
  */
-static int avdest (struct iface *ifp)
+static int avdest (struct iface *ifp, int hgroup)
 {
     struct lv *lv;
     struct lq *lq;
@@ -670,8 +1277,23 @@ static int avdest (struct iface *ifp)
   
     if(ifp->hwaddr == NULLCHAR)
         return 0;
-    tprintf("%s:\n",ifp->name);
-    j2tputs("Station   Last Digipeated  Last heard Direct    Pkts  Digipeater\n");
+
+    j2tputs ("\n");  /* If you want less crowded listing - 30Sep2024 */
+
+   /* 29Nov2024, Maiko, Doing this REALLY simplies conditional further down */
+	if (!hgroup)
+		hgroup = ifp->ax25->hgroup;
+
+    tprintf("%s:",ifp->name);
+
+	/*
+	 * 11Nov2024, Maiko, should note the heard group if in effect
+	 * 29Nov2024, Maiko, use hgroup var now, simplifies code
+     */
+    if (hgroup)
+		tprintf (" %s Hrd Group", get_hgroup_description (hgroup));
+
+    j2tputs("\nStation   Last Digipeated  Last heard Direct    Pkts  Digipeater\n");
   /*
    * 06Apr2021, Maiko, Figuring out new spacing to accomodate digi call
    *
@@ -680,14 +1302,19 @@ static int avdest (struct iface *ifp)
     for(lv = Lv;lv != NULLLV;lv = lv->next){
         if(lv->iface != ifp)
             continue;
+	/* 06Nov2024, Maiko, Only show entries for current heard group */
+	if(lv->hgroup != /* ifp->ax25->hgroup */ hgroup)
+		continue;
   
         tprintf("%-10s%-17s",
         pax25(tmp,lv->addr),tformat(secclock() - lv->time));
   
+	/* 23Nov2024, Maiko, Adding new hgroup to al_lookup - fine tune */
+
         if(addreq(lv->addr,ifp->hwaddr)){
             /* Special case; it's our address */
             tprintf("%-17s",tformat(secclock() - ifp->lastsent));
-        } else if((lq = al_lookup(ifp,lv->addr,0)) == NULLLQ){
+        } else if((lq = al_lookup(ifp,lv->addr,0,hgroup)) == NULLLQ){
             tprintf("%-17s","");
         } else {
             tprintf("%-17s",tformat(secclock() - lq->time));

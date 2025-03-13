@@ -22,6 +22,13 @@
  * 21May2021, Maiko (VE4KLM), added 2 new sort functions for the
  * newly added LOAD destination and digipeated heard calls.
  *
+ * 29Nov2024, Maiko, This whole module was removed earlier this year !
+ *
+ * Had I just changed the manner in which I managed the link lists in the
+ * first place, then I would never have had to write these functions. That
+ * is why you will see the #axhsort.o (commented out) in the makefile.
+ * 
+ * These function 'were' called from axheard.c at some point (but no more)
  */
 
 #include "ax25.h"

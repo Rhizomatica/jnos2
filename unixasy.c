@@ -8,7 +8,7 @@
  * weirdball I/O hooks are just WAMPES's version of register_fd().  The API
  * for WAMPES is a heck of a lot hairier, though.)
  */
-
+#include <linux/serial.h>
 #include <sys/types.h>
 
 #include <fcntl.h>
@@ -317,6 +317,24 @@ asy_init(dev,ifp,arg1,arg2,bufsize,trigchar,monitor,speed,force,triglevel,polled
     ap->iface = ifp;
     sp = find_speed(speed);
     ap->speed = speed_table[sp].speed;
+
+         if (1)
+         {
+             log (-1, "nino tnc special processing");
+		tprintf("ninotnc special serial processing \n\r");
+             struct serial_struct kss;
+
+             if (ioctl(fd, TIOCGSERIAL, &kss) == -1)
+                 tprintf("get latency failed %s\n", strerror(errno));
+             else
+             {
+                 kss.flags |= ASYNC_LOW_LATENCY;
+
+                 if (ioctl(fd, TIOCSSERIAL, &kss) == -1)
+                     tprintf("set latency failed %s\n", strerror(errno));
+             }
+         }
+
     memset((char *) &termios, 0, sizeof(termios));
     termios.c_iflag = IGNBRK|IGNPAR;
     termios.c_cflag = CS8|CREAD|speed_table[sp].flags;
@@ -601,6 +619,7 @@ asy_vmin(dev, pktsize)
     if (tcgetattr(asyp->fd, &termios))
 	return -1;
     termios.c_cc[VMIN] = asyp->pktsize = pktsize & 255;
+
     if (tcsetattr(asyp->fd, TCSANOW, &termios))
 	return -1;
     return 0;
@@ -761,12 +780,20 @@ asy_input(dev, arg1, arg2)
 	}
 	if ((c = ap->rxq) <= 0)
 	    c = 1;
+
+	/* enque any data already read (Nino 20 Sep 2024)*/
+
+	while (i > 0 && c > 0) {
+		ap->rxchar += i;
+		ap->rxput++;
+		enqueue(&ap->rcvq, qdata(buf, i));
+		i = 0;
+		c--;
+	}
+
+	/* loop while data remains, or out of space in queue (Nino 20 Sep 2024)*/
 	while (i > 0 && c > 0)
 	{
-	    ap->rxchar += i;
-	    ap->rxput++;
-	    enqueue(&ap->rcvq, qdata(buf, i));
-	    c--;
 	    if (ap->pktsize)
 	    {
 		/* can't just read to check for data, since it might block */
@@ -781,8 +808,25 @@ asy_input(dev, arg1, arg2)
 		}
 	    }
 	    i = (int)read (ap->fd, buf, (size_t)(ap->rxbuf));
+		/* enqueue after read (this was the beginning of the loop before (Nino 20 Sep 2024)*/
+		if (i >0) {
+		    ap->rxchar += i;
+		    ap->rxput++;
+	  	    enqueue(&ap->rcvq, qdata(buf, i));
+	  	    c--;
+		    i = 0;
+
+		}
+
 	}
 	free(buf);
+
+	/* I added this to debug and find the missing serial data (Nino 20 Sep 2024) */
+	if (i > 0) {
+		tprintf("stranded %d bytes\r\n", i);
+
+	}
+
 	if (i == -1) {
             if (errno == EINTR) continue;  /* timeout, so retry */
             else if (errno != EWOULDBLOCK) {

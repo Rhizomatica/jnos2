@@ -181,6 +181,19 @@ int rel;
   
     struct ax_route *axr;
     char mode;
+
+	/*
+	 * 24May2024, Maiko (VE4KLM), discard IP if not allowed on AX25
+	 *  (will this work ? Mark or somebody needs to test this, it's
+	 *    been eons since I did any IP over AX25, sorry guys ...)
+	 *
+	 * 02Jun2024, Maiko, Aggggg, fixed bad typo, & NOT &= !
+	 */
+   	if (iface->flags & NO_IP_AX25)
+	{
+		free_p(bp);
+		return -1;
+	}
   
     if(gateway == iface->broadcast) /* This is a broadcast IP datagram */
         return (*iface->output)(iface,Ax25multi[0],iface->hwaddr,PID_IP,bp);
@@ -274,7 +287,10 @@ struct mbuf *data;  /* Data field (includes PID) */
     struct mbuf *cbp;
     struct ax25 addr;
     struct ax_route *axr;
+#ifdef	HEARDLIST_MYCALLS
+ /* 30Sep2024, Maiko (VE4KLM), stuff sent out does not mean heard */
     char *idest;
+#endif
     int rval;
   
     /* If the source addr is unspecified, use the interface address */
@@ -291,10 +307,14 @@ struct mbuf *data;  /* Data field (includes PID) */
     if(axr != NULLAXR){
         memcpy(addr.digis,axr->digis,axr->ndigis*AXALEN);
         addr.ndigis = axr->ndigis;
+#ifdef	HEARDLIST_MYCALLS
         idest = addr.digis[0];
+#endif
     } else {
         addr.ndigis = 0;
+#ifdef	HEARDLIST_MYCALLS
         idest = dest;
+#endif
     }
   
     addr.nextdigi = 0;
@@ -311,12 +331,18 @@ struct mbuf *data;  /* Data field (includes PID) */
      * done at the IP router layer, but just to be safe...
      */
     if(iface->forw != NULLIF){
+#ifdef	HEARDLIST_MYCALLS
+	/* 30Sep2024, Maiko (VE4KLM), stuff sent out does not mean heard */
         logsrc(iface->forw,source);
         logdest(iface->forw,idest);
+#endif
         rval = (*iface->forw->raw)(iface->forw,data);
     } else {
+#ifdef	HEARDLIST_MYCALLS
+	/* 30Sep2024, Maiko (VE4KLM), stuff sent out does not mean heard */
         logsrc(iface,source);
         logdest(iface,idest);
+#endif
         rval = (*iface->raw)(iface,data);
     }
     return rval;
@@ -561,22 +587,31 @@ struct mbuf *bp;
 	 * Adding LOG_AXHEARD to this conditional, and checking the value
 	 * of what could be a DTI for any data that has no level 3 layer,
 	 * as well, it's not necessary to dup_p() the entire packet.
+         *
+         * 24May2024, Maiko, WRONG, we DO need to dup_p entire packet,
+         * what happens if PID_IP shows up ? A silly mistake I made.
 	 */
     if(iface->flags & LOG_IPHEARD || iface->flags & LOG_AXHEARD)
 	{
         struct mbuf *nbp;
         struct ip ip;
         int len;
-
 /*
  * we only need the first 3 bytes, suppose we could even
  * do the sneak peak way, which would be less cpu usage ?
  *
         len = len_p(bp);
         if(dup_p(&nbp, bp, 0, len) == len)
- */
+ *
+ * 24May2024, Maiko, WRONG, Silly mistake on my part, we absolutely
+ * do need the full len bytes ! What happens if PID_IP shows up ? We
+ * need to call ntohip () which will fail miserably - put it back !
+ * 
         if (dup_p(&nbp, bp, 0, 3) == 3)
-		{
+ */
+        len = len_p(bp);
+        if(dup_p(&nbp, bp, 0, len) == len)
+	{
             /* find higher proto, if any */
             (void) PULLCHAR(&nbp);  /* skip control byte */
             if((len = PULLCHAR(&nbp)) == PID_IP)
@@ -589,10 +624,12 @@ struct mbuf *bp;
                 if(ip.version == IPVERSION)
                     log_ipheard(&(ip.source),iface);
             }
+#ifdef	APRSD	/* 23Jun2024, Maiko */
 			else if (len == PID_NO_L3)	/* check for possible DTI (aprs */
 			{
 				aprsMICEdata = mice_dti ((unsigned char)PULLCHAR(&nbp));
 			}
+#endif
             free_p(nbp);
         }
     }
@@ -877,8 +914,10 @@ struct mbuf *bp;
                     iface = cross;
                 if(digiaddr || iface->flags & AX25_DIGI) {
                     if((hbp = htonax25(&hdr,bp)) != NULLBUF){
+#ifdef	APRS_LOGSENT_TXENABLE_WZ0C
+/* 24May2024, Maiko, Compiler will complain this is unused */
 		      int hdrlen = AXALEN * (2 + hdr.ndigis) + 2;
-
+#endif
                         if(digiaddr)
                             logsrc(iface,iface->ax25->cdigi);
                         else
@@ -886,25 +925,33 @@ struct mbuf *bp;
 			
                         if(iface->forw != NULLIF){
                             logdest(iface->forw,hdr.digis[hdr.nextdigi]);
-
-/* 11Mar2024, Maiko, Make this optional */
-#ifdef	APRS_LOGSENT_WZ0C
+/*
+ * 11Mar2024, Maiko, Make this optional
+ * 29Jun2024, Maiko, The !(digiaddr || aprs_txenable) almost makes no
+ * sense to me, so I am just going to revert back to original code in
+ * this section. This will render aprs_txenable flag 'nonfunctional'.
+ */
+#ifdef	APRS_LOGSENT_TXENABLE_WZ0C
 			    if( digiaddr ){
 			      aprs_logsentmbuf( &hdr, hbp, hdrlen, iface->forw->name );
 			    }
-#endif
 			    if( !digiaddr || aprs_txenable )
+#endif
                             (*iface->forw->raw)(iface->forw,hbp);
                         } else {
                             logdest(iface,hdr.digis[hdr.nextdigi]);
-
-/* 11Mar2024, Maiko, Make this optional */
-#ifdef	APRS_LOGSENT_WZ0C
+/*
+ * 11Mar2024, Maiko, Make this optional
+ * 29Jun2024, Maiko, The !(digiaddr || aprs_txenable) almost makes no
+ * sense to me, so I am just going to revert back to original code in
+ * this section. This will render aprs_txenable flag 'nonfunctional'.
+ */
+#ifdef	APRS_LOGSENT_TXENABLE_WZ0C
 			    if( digiaddr ){
 			      aprs_logsentmbuf( &hdr, hbp, hdrlen, iface->name );
 			    }
-#endif
 			    if( !digiaddr || aprs_txenable )
+#endif
                             (*iface->raw)(iface,hbp);
                         }
                         bp = NULLBUF;

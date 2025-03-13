@@ -2284,19 +2284,22 @@ void *p;
         j2tputs(Noperm);
         return 0;
     }
-  
+
+	/* 23Nov2024, Maiko (VE4KLM), just to remind me it still needs doing */
+    tprintf ("possible heard groups not listed yet\n");
+
     if(argc > 1){
         if( ((ifp = if_lookup(argv[1])) == NULLIF) || (ifp->type != CL_AX25) ||
         ((ifp->flags & HIDE_PORT) && !(m->privs & SYSOP_CMD)) ) {
             tprintf(Badinterface,argv[1]);
             return 0;
         }
-        axheard(ifp);
+        axheard(ifp, 0); /* 23Nov2024, Maiko, new hgroup arg */
         return 0;
     }
     for(ifp = Ifaces;ifp != NULLIF;ifp = ifp->next){
         if((ifp->flags & LOG_AXHEARD)  && ( !(ifp->flags & HIDE_PORT) || m->privs&SYSOP_CMD) )
-            if(axheard(ifp) == EOF)
+            if(axheard(ifp, 0) == EOF) /* 23Nov2024, Maiko, new hgroup arg */
                 break;
     }
     return 0;

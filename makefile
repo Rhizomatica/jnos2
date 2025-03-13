@@ -7,9 +7,11 @@
 # Makefile for JNOS 2.0 - started 15Oct2004 by VE4KLM (Maiko Langelaar)
 #
 # 07Oct2019, Maiko (VE4KLM), Now using ./configure in conjunction with makefile
-#  (configure_16Mar2024_v1.17 ensures compatibility with ./configure script)
+#  (configure_07Feb2025_v1.20 ensures compatibility with ./configure script)
 #
-CC = gcc
+CC = gcc -Wno-misleading-indentation
+#CC = gcc -Wno-return-mismatch -Wno-implicit-function-declaration
+#
 RM = rm -f
 AR = ar rcs
 #
@@ -22,7 +24,15 @@ PATCHES = -fsigned-char -DIPV6 -DETHER
 #
 # JNOS uses NCURSES (make sure these match what you have installed)
 #
-ICURSES = -I/usr/include/ncurses
+# 10Nov2024, Maiko (VE4KLM), Latest NCURSES libs requires a bandaid to use
+#
+
+ifneq ("$(wildcard ./curses.bandaid)","")
+ ICURSES = -I/usr/include/ncurses -DNCURSES_INTERNALS
+else
+ ICURSES = -I/usr/include/ncurses
+endif
+
 LCURSES = -lncurses
 #
 # Compiler Warnings
@@ -78,6 +88,7 @@ else
  B2FLIBS= -lm
 endif
 
+
 CLIENTS= telnet.o ftpcli.o finger.o smtpcli.o hop.o \
         tip.o nntpcli.o dialer.o rlogin.o callcli.o \
         mailcli.o pop2cli.o pop3cli.o rdate.o look.o
@@ -111,7 +122,7 @@ VARA=	vara.o varamail.o varacli.o varacmd.o varaptt.o varamodem.o \
 
 AX25=   ax25cmd.o ax25user.o ax25.o axheard.o ax25aar.o \
 	lapbtime.o lapb.o kiss.o kisspoll.o ax25subr.o ax25hdr.o \
-	ax25mail.o axui.o ax25xdigi.o fldigi.o
+	ax25mail.o axui.o ax25xdigi.o fldigi.o fnvhash.o
 # axhsort.o
 
 APRS=	aprs.o aprssrv.o aprsstat.o aprsmice.o \
@@ -215,7 +226,7 @@ clean:
 	$(RM) *.[oa]
 	$(RM) j2pwmgr/*.[oa]
 	$(RM) jnos jnospwmgr
-	$(RM) configure.okay configure.wlsl makefile.okay
+	$(RM) configure.okay configure.wlsl makefile.okay curses.bandaid
 
 clients.a: $(CLIENTS)
 	$(RM) clients.a
