@@ -1,0 +1,30 @@
+
+ So we have a new version 2.0q which is essentially the last official version,
+ with all the development done since, overlaid on top of it, followed by the
+ effort to get rid of compiler and cppcheck warnings.
+
+ This time around, the new version is in a subdirectory, 2.0q, just in case
+ you accidently rsync over your existing source tree, or want to preserve.
+
+ The development repo is of course empty right now, until such time I start
+ adding more patches and updates ...
+
+ This version has a new approach to AX25 broadcasts, so configuration changes
+ are quite necessary. Check the official.txt file for notes on doing this.
+
+ Documentation is badly dated (always happens, not going to make excuses),
+ so at least give the development.txt and official.txt files a read before
+ asking me for help, sorry, one day I will get it right, yeah sure ...
+
+ My problem is I keep adding new ideas all the time, many of which I have to
+ wonder if anyone will ever use, besides myself. I need to just freeze things
+ and only deal with bug fixes and making sure it works on the latest linux
+ distributions as they come out, which ironically was my original intent
+ when I started this project, coming up on 20 years ago now ?
+
+Maiko / VE4KLM
+
+ Official Site : www.langelaar.net/radio/ve4klm/jnos2
+
+16Augu2025
+

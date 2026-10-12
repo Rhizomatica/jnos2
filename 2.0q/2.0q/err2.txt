@@ -1,0 +1,1448 @@
+
+^
+KLUDGE_CH_mboxmail.c:142:3: warning: If memory allocation fails, then there is a possible null pointer dereference: sidcopy [nullPointerOutOfMemory]
+ *sidcopy = m->stype; strcpy (sidcopy + 1, argv);
+  ^
+KLUDGE_CH_mboxmail.c:140:25: note: Assuming allocation function fails
+ char *sidcopy = malloc (strlen (argv) + 2);
+                        ^
+KLUDGE_CH_mboxmail.c:140:25: note: Assignment 'sidcopy=malloc(strlen(argv)+2)', assigned value is 0
+ char *sidcopy = malloc (strlen (argv) + 2);
+                        ^
+KLUDGE_CH_mboxmail.c:142:3: note: Null pointer dereference
+ *sidcopy = m->stype; strcpy (sidcopy + 1, argv);
+  ^
+KLUDGE_CH_mboxmail.c:219:3: warning: If memory allocation fails, then there is a possible null pointer dereference: sclptr [nullPointerOutOfMemory]
+  sclptr->sid = sidcopy;
+  ^
+KLUDGE_CH_mboxmail.c:218:19: note: Assuming allocation function fails
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+KLUDGE_CH_mboxmail.c:218:19: note: Assignment 'sclptr=malloc(sizeof(struct J2SIDCAP))', assigned value is 0
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+KLUDGE_CH_mboxmail.c:219:3: note: Null pointer dereference
+  sclptr->sid = sidcopy;
+  ^
+KLUDGE_CH_mboxmail.c:221:3: warning: If memory allocation fails, then there is a possible null pointer dereference: sclptr [nullPointerOutOfMemory]
+  sclptr->mbox = (J2SIDMBX*)0;
+  ^
+KLUDGE_CH_mboxmail.c:218:19: note: Assuming allocation function fails
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+KLUDGE_CH_mboxmail.c:218:19: note: Assignment 'sclptr=malloc(sizeof(struct J2SIDCAP))', assigned value is 0
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+KLUDGE_CH_mboxmail.c:221:3: note: Null pointer dereference
+  sclptr->mbox = (J2SIDMBX*)0;
+  ^
+KLUDGE_CH_mboxmail.c:223:3: warning: If memory allocation fails, then there is a possible null pointer dereference: sclptr [nullPointerOutOfMemory]
+  sclptr->next = j2sidcaplist;
+  ^
+KLUDGE_CH_mboxmail.c:218:19: note: Assuming allocation function fails
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+KLUDGE_CH_mboxmail.c:218:19: note: Assignment 'sclptr=malloc(sizeof(struct J2SIDCAP))', assigned value is 0
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+KLUDGE_CH_mboxmail.c:223:3: note: Null pointer dereference
+  sclptr->next = j2sidcaplist;
+  ^
+KLUDGE_CH_mboxmail.c:230:16: warning: If memory allocation fails, then there is a possible null pointer dereference: sclptr [nullPointerOutOfMemory]
+ for (mclptr = sclptr->mbox; mclptr; mclptr = mclptr->next)
+               ^
+KLUDGE_CH_mboxmail.c:218:19: note: Assuming allocation function fails
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+KLUDGE_CH_mboxmail.c:218:19: note: Assignment 'sclptr=malloc(sizeof(struct J2SIDCAP))', assigned value is 0
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+KLUDGE_CH_mboxmail.c:230:16: note: Null pointer dereference
+ for (mclptr = sclptr->mbox; mclptr; mclptr = mclptr->next)
+               ^
+KLUDGE_CH_mboxmail.c:142:39: error: If memory allocation fail: pointer addition with NULL pointer. [nullPointerArithmeticOutOfMemory]
+ *sidcopy = m->stype; strcpy (sidcopy + 1, argv);
+                                      ^
+KLUDGE_CH_mboxmail.c:140:25: note: Assuming allocation function fails
+ char *sidcopy = malloc (strlen (argv) + 2);
+                        ^
+KLUDGE_CH_mboxmail.c:140:25: note: Assignment 'sidcopy=malloc(strlen(argv)+2)', assigned value is 0
+ char *sidcopy = malloc (strlen (argv) + 2);
+                        ^
+KLUDGE_CH_mboxmail.c:142:39: note: Null pointer addition
+ *sidcopy = m->stype; strcpy (sidcopy + 1, argv);
+                                      ^
+
+^
+agwpe.c:162:18: warning: Uninitialized variable: iface->mtu [uninitvar]
+  iomtu = iface->mtu;
+                 ^
+agwpe.c:227:21: note: Calling function 'agwpe_send', 1st argument '&dummy' value is <Uninit>
+ return agwpe_send (&dummy, bp);
+                    ^
+agwpe.c:162:18: note: Uninitialized variable: iface->mtu
+  iomtu = iface->mtu;
+                 ^
+
+^
+
+^
+aprsack.c:123:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  ack->nexttx = secclock() + next / 1000;
+  ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:123:3: note: Null pointer dereference
+  ack->nexttx = secclock() + next / 1000;
+  ^
+aprsack.c:125:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  ack->rf = rf;
+  ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:125:3: note: Null pointer dereference
+  ack->rf = rf;
+  ^
+aprsack.c:126:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  ack->data = j2strdup( data );
+  ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:126:3: note: Null pointer dereference
+  ack->data = j2strdup( data );
+  ^
+aprsack.c:127:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  ack->len = len;
+  ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:127:3: note: Null pointer dereference
+  ack->len = len;
+  ^
+aprsack.c:129:12: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  strncpy( ack->sender, sender, 9 );
+           ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:129:12: note: Null pointer dereference
+  strncpy( ack->sender, sender, 9 );
+           ^
+aprsack.c:130:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  ack->sender[9] = '\0';
+  ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:130:3: note: Null pointer dereference
+  ack->sender[9] = '\0';
+  ^
+aprsack.c:132:12: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  strncpy( ack->addressee, addressee, 9 );
+           ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:132:12: note: Null pointer dereference
+  strncpy( ack->addressee, addressee, 9 );
+           ^
+aprsack.c:133:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  ack->addressee[9] = '\0';
+  ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:133:3: note: Null pointer dereference
+  ack->addressee[9] = '\0';
+  ^
+aprsack.c:135:12: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  strncpy( ack->msgno, msgno, 5 );
+           ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:135:12: note: Null pointer dereference
+  strncpy( ack->msgno, msgno, 5 );
+           ^
+aprsack.c:136:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  ack->msgno[5] = '\0';
+  ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:136:3: note: Null pointer dereference
+  ack->msgno[5] = '\0';
+  ^
+aprsack.c:138:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  ack->retries = 0;
+  ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:138:3: note: Null pointer dereference
+  ack->retries = 0;
+  ^
+aprsack.c:141:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ack [nullPointerOutOfMemory]
+  ack->next = Aprs_needacks;
+  ^
+aprsack.c:122:34: note: Assuming allocation function fails
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+                                 ^
+aprsack.c:122:9: note: Assignment 'ack=(struct aprs_ack*)malloc(sizeof(struct aprs_ack))', assigned value is 0
+  ack = (struct aprs_ack *)malloc( sizeof( struct aprs_ack ));
+        ^
+aprsack.c:141:3: note: Null pointer dereference
+  ack->next = Aprs_needacks;
+  ^
+
+^
+
+^
+
+^
+
+^
+aprsdigi.c:103:15: warning: If memory allocation fails, then there is a possible null pointer dereference: v [nullPointerOutOfMemory]
+      strcpy( v->call, c );
+              ^
+aprsdigi.c:102:26: note: Assuming allocation function fails
+      v = (VDIGI *)malloc( sizeof( VDIGI ));
+                         ^
+aprsdigi.c:102:11: note: Assignment 'v=(struct VDIGI*)malloc(sizeof(struct VDIGI))', assigned value is 0
+      v = (VDIGI *)malloc( sizeof( VDIGI ));
+          ^
+aprsdigi.c:103:15: note: Null pointer dereference
+      strcpy( v->call, c );
+              ^
+aprsdigi.c:104:7: warning: If memory allocation fails, then there is a possible null pointer dereference: v [nullPointerOutOfMemory]
+      v->maxhop = n;
+      ^
+aprsdigi.c:102:26: note: Assuming allocation function fails
+      v = (VDIGI *)malloc( sizeof( VDIGI ));
+                         ^
+aprsdigi.c:102:11: note: Assignment 'v=(struct VDIGI*)malloc(sizeof(struct VDIGI))', assigned value is 0
+      v = (VDIGI *)malloc( sizeof( VDIGI ));
+          ^
+aprsdigi.c:104:7: note: Null pointer dereference
+      v->maxhop = n;
+      ^
+aprsdigi.c:106:7: warning: If memory allocation fails, then there is a possible null pointer dereference: v [nullPointerOutOfMemory]
+      v->next = aprsvdigis;
+      ^
+aprsdigi.c:102:26: note: Assuming allocation function fails
+      v = (VDIGI *)malloc( sizeof( VDIGI ));
+                         ^
+aprsdigi.c:102:11: note: Assignment 'v=(struct VDIGI*)malloc(sizeof(struct VDIGI))', assigned value is 0
+      v = (VDIGI *)malloc( sizeof( VDIGI ));
+          ^
+aprsdigi.c:106:7: note: Null pointer dereference
+      v->next = aprsvdigis;
+      ^
+
+^
+
+^
+
+^
+aprsmice.c:287:50: error: Array 'speedInfo[3]' accessed at index 3, which is out of bounds. [arrayIndexOutOfBounds]
+ course = (int)speedInfo[1] % 10 + (int)speedInfo[3];
+                                                 ^
+
+^
+
+^
+
+^
+
+^
+aprssrv.c:2457:4: warning: If memory allocation fails, then there is a possible null pointer dereference: aprs_is_ringbuf [nullPointerOutOfMemory]
+   aprs_is_ringbuf[i] = ptr + 300 * i;
+   ^
+aprssrv.c:2453:44: note: Assuming allocation function fails
+ aprs_is_ringbuf = (unsigned char **)malloc( sizeof(unsigned char *) * aprs_is_ringsize );
+                                           ^
+aprssrv.c:2453:20: note: Assignment 'aprs_is_ringbuf=(unsigned char**)malloc(sizeof(unsigned char*)*aprs_is_ringsize)', assigned value is 0
+ aprs_is_ringbuf = (unsigned char **)malloc( sizeof(unsigned char *) * aprs_is_ringsize );
+                   ^
+aprssrv.c:2457:4: note: Null pointer dereference
+   aprs_is_ringbuf[i] = ptr + 300 * i;
+   ^
+
+^
+aprsstat.c:808:2: error: Resource leak: fp [resourceLeak]
+ return 0;
+ ^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+axhsort.c:79:9: warning: Uninitialized variables: topnewlq.next, topnewlq.iface, topnewlq.time, topnewlq.currxcnt, topnewlq.hgroup [uninitvar]
+ return topnewlq;
+        ^
+axhsort.c:42:18: note: Assuming condition is false
+ for (lp = Lq;lp != NULLLQ; lp = lp->next)
+                 ^
+axhsort.c:79:9: note: Uninitialized variables: topnewlq.next, topnewlq.iface, topnewlq.time, topnewlq.currxcnt, topnewlq.hgroup
+ return topnewlq;
+        ^
+axhsort.c:127:9: warning: Uninitialized variables: topnewld.next, topnewld.iface, topnewld.time, topnewld.currxcnt, topnewld.hgroup [uninitvar]
+ return topnewld;
+        ^
+axhsort.c:90:19: note: Assuming condition is false
+ for (lp = Ld; lp != NULLLD; lp = lp->next)
+                  ^
+axhsort.c:127:9: note: Uninitialized variables: topnewld.next, topnewld.iface, topnewld.time, topnewld.currxcnt, topnewld.hgroup
+ return topnewld;
+        ^
+axhsort.c:175:9: warning: Uninitialized variables: topnewlv.next, topnewlv.iface, topnewlv.time, topnewlv.currxcnt, topnewlv.hgroup [uninitvar]
+ return topnewlv;
+        ^
+axhsort.c:138:18: note: Assuming condition is false
+ for (lp = Lv;lp != NULLLV; lp = lp->next)
+                 ^
+axhsort.c:175:9: note: Uninitialized variables: topnewlv.next, topnewlv.iface, topnewlv.time, topnewlv.currxcnt, topnewlv.hgroup
+ return topnewlv;
+        ^
+
+^
+
+^
+
+^
+
+^
+bmconv.c:93:20: warning: Possible null pointer dereference: mfile [nullPointer]
+            fclose(mfile);
+                   ^
+bmconv.c:77:21: note: Assignment 'mfile=(FILE*)0', assigned value is 0
+            mfile = NULLFILE;
+                    ^
+bmconv.c:78:45: note: Assuming condition is false
+            while(fgets(buf,sizeof(buf),fp) != NULLCHAR) {
+                                            ^
+bmconv.c:93:20: note: Null pointer dereference
+            fclose(mfile);
+                   ^
+
+^
+bmutil.c:1529:9: error: Resource leak: Alog [resourceLeak]
+        return;
+        ^
+
+^
+
+^
+
+^
+cmdparse.c:414:34: warning: Uninitialized variable: *var [uninitvar]
+        tprintf("%s: %s\n",label,*var ? "on":"off");
+                                 ^
+cmdparse.c:451:27: note: Calling function 'setbool', 1st argument '&doing' value is <Uninit>
+    int result = setbool( &doing, label, argc, argv );
+                          ^
+cmdparse.c:414:34: note: Uninitialized variable: *var
+        tprintf("%s: %s\n",label,*var ? "on":"off");
+                                 ^
+
+^
+
+^
+
+^
+
+^
+dirutil.c:264:12: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+    fclose(fp);
+           ^
+dirutil.c:261:15: note: Assuming allocation function fails
+    fp = fopen(tmpname,WRITE_TEXT);
+              ^
+dirutil.c:261:15: note: Assignment 'fp=fopen(tmpname,"w")', assigned value is 0
+    fp = fopen(tmpname,WRITE_TEXT);
+              ^
+dirutil.c:264:12: note: Null pointer dereference
+    fclose(fp);
+           ^
+dirutil.c:570:25: error: Uninitialized variable: drive [legacyUninitvar]
+    if (_osmajor < 3 || drive == -1) {
+                        ^
+
+^
+domain.c:1126:5: warning: Possible null pointer dereference: last_rrp [nullPointer]
+    last_rrp->next = Dcache;
+    ^
+domain.c:1120:16: note: Assignment 'last_rrp=(struct rr*)0', assigned value is 0
+    last_rrp = NULLRR;
+               ^
+domain.c:1121:16: note: Assuming condition is false
+    while(rrlp != NULLRR){
+               ^
+domain.c:1126:5: note: Null pointer dereference
+    last_rrp->next = Dcache;
+    ^
+
+^
+
+^
+
+^
+
+^
+editor.c:1434:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ntok [nullPointerOutOfMemory]
+  ntok->lchar = '\000';
+  ^
+editor.c:1433:26: note: Assuming allocation function fails
+  ntok = (TOKEN *)mallocw(TOKSIZE);
+                         ^
+editor.c:1433:10: note: Assignment 'ntok=(struct TOKEN*)malloc(sizeof(struct TOKEN))', assigned value is 0
+  ntok = (TOKEN *)mallocw(TOKSIZE);
+         ^
+editor.c:1434:3: note: Null pointer dereference
+  ntok->lchar = '\000';
+  ^
+editor.c:1435:3: warning: If memory allocation fails, then there is a possible null pointer dereference: ntok [nullPointerOutOfMemory]
+  ntok->next = 0;
+  ^
+editor.c:1433:26: note: Assuming allocation function fails
+  ntok = (TOKEN *)mallocw(TOKSIZE);
+                         ^
+editor.c:1433:10: note: Assignment 'ntok=(struct TOKEN*)malloc(sizeof(struct TOKEN))', assigned value is 0
+  ntok = (TOKEN *)mallocw(TOKSIZE);
+         ^
+editor.c:1435:3: note: Null pointer dereference
+  ntok->next = 0;
+  ^
+editor.c:962:5: warning: Uninitialized variable: c [uninitvar]
+ if(c != NL) {
+    ^
+editor.c:936:32: note: Assuming condition is false
+ for(count = 0, cp = str; size > count;) {
+                               ^
+editor.c:962:5: note: Uninitialized variable: c
+ if(c != NL) {
+    ^
+editor.c:1706:10: warning: Uninitialized variable: rval [uninitvar]
+ return (rval);
+         ^
+editor.c:1696:8: note: Assuming condition is false
+ while(*line) {
+       ^
+editor.c:1706:10: note: Uninitialized variable: rval
+ return (rval);
+         ^
+editor.c:2298:1: error: Unmatched '{'. Configuration: 'STANDALONE'. [syntaxError]
+{
+^
+
+^
+
+^
+fbbfwd.c:2813:14: warning: If memory allocation fails, then there is a possible null pointer dereference: obuf [nullPointerOutOfMemory]
+  if (fgets (obuf, MBXLINE, fpInFile) == NULL)
+             ^
+fbbfwd.c:2807:16: note: Assuming allocation function fails
+ obuf = malloc (9999);
+               ^
+fbbfwd.c:2807:16: note: Assignment 'obuf=malloc(9999)', assigned value is 0
+ obuf = malloc (9999);
+               ^
+fbbfwd.c:2813:14: note: Null pointer dereference
+  if (fgets (obuf, MBXLINE, fpInFile) == NULL)
+             ^
+
+^
+
+^
+
+^
+
+^
+forward.c:772:11: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+   fseek (fp, 0L, SEEK_END);
+          ^
+forward.c:771:15: note: Assuming allocation function fails
+   fp = fopen (f->oFile, "rb");
+              ^
+forward.c:771:15: note: Assignment 'fp=fopen(f->oFile,"rb")', assigned value is 0
+   fp = fopen (f->oFile, "rb");
+              ^
+forward.c:772:11: note: Null pointer dereference
+   fseek (fp, 0L, SEEK_END);
+          ^
+forward.c:773:27: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+   compressed_sz = ftell (fp);
+                          ^
+forward.c:771:15: note: Assuming allocation function fails
+   fp = fopen (f->oFile, "rb");
+              ^
+forward.c:771:15: note: Assignment 'fp=fopen(f->oFile,"rb")', assigned value is 0
+   fp = fopen (f->oFile, "rb");
+              ^
+forward.c:773:27: note: Null pointer dereference
+   compressed_sz = ftell (fp);
+                          ^
+forward.c:774:12: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+   fclose (fp);
+           ^
+forward.c:771:15: note: Assuming allocation function fails
+   fp = fopen (f->oFile, "rb");
+              ^
+forward.c:771:15: note: Assignment 'fp=fopen(f->oFile,"rb")', assigned value is 0
+   fp = fopen (f->oFile, "rb");
+              ^
+forward.c:774:12: note: Null pointer dereference
+   fclose (fp);
+           ^
+forward.c:784:11: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+   fseek (fp, 0L, SEEK_END);
+          ^
+forward.c:783:15: note: Assuming allocation function fails
+   fp = fopen (f->iFile, "rb");
+              ^
+forward.c:783:15: note: Assignment 'fp=fopen(f->iFile,"rb")', assigned value is 0
+   fp = fopen (f->iFile, "rb");
+              ^
+forward.c:784:11: note: Null pointer dereference
+   fseek (fp, 0L, SEEK_END);
+          ^
+forward.c:785:29: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+   uncompressed_sz = ftell (fp);
+                            ^
+forward.c:783:15: note: Assuming allocation function fails
+   fp = fopen (f->iFile, "rb");
+              ^
+forward.c:783:15: note: Assignment 'fp=fopen(f->iFile,"rb")', assigned value is 0
+   fp = fopen (f->iFile, "rb");
+              ^
+forward.c:785:29: note: Null pointer dereference
+   uncompressed_sz = ftell (fp);
+                            ^
+forward.c:786:12: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+   fclose (fp);
+           ^
+forward.c:783:15: note: Assuming allocation function fails
+   fp = fopen (f->iFile, "rb");
+              ^
+forward.c:783:15: note: Assignment 'fp=fopen(f->iFile,"rb")', assigned value is 0
+   fp = fopen (f->iFile, "rb");
+              ^
+forward.c:786:12: note: Null pointer dereference
+   fclose (fp);
+           ^
+forward.c:149:12: warning: Uninitialized variable: result [uninitvar]
+    return result;
+           ^
+forward.c:1222:33: note: Calling function 'findident', 3rd argument 'hours' value is <Uninit>
+    while(*findident(line,pos++,hours)) {
+                                ^
+forward.c:149:12: note: Uninitialized variable: result
+    return result;
+           ^
+
+^
+ftpcli.c:283:25: error: Uninitialized variable: un [legacyUninitvar]
+                else if(un != NULLCHAR)
+                        ^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+ipcmd.c:574:11: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+  fclose (fp);
+          ^
+ipcmd.c:566:14: note: Assuming allocation function fails
+  fp = fopen ("encap.txt.gen", "w");
+             ^
+ipcmd.c:566:14: note: Assignment 'fp=fopen("encap.txt.gen","w")', assigned value is 0
+  fp = fopen ("encap.txt.gen", "w");
+             ^
+ipcmd.c:574:11: note: Null pointer dereference
+  fclose (fp);
+          ^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+j2tmpnam.c:197:30: error: Uninitialized variable: tmpbuf [legacyUninitvar]
+    if (j2path_search (s ? : tmpbuf, L_tmpnam, NULL, NULL, 0))
+                             ^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+lzhuf.c:1226:45: warning: If resource allocation fails, then there is a possible null pointer dereference: oFile [nullPointerOutOfResources]
+      while ((x = fread(&buffer[2], 1, 250, oFile)) > 0) {
+                                            ^
+lzhuf.c:1166:20: note: Assuming allocation function fails
+      oFile = fopen(f->oFile, "rb");
+                   ^
+lzhuf.c:1166:20: note: Assignment 'oFile=fopen(f->oFile,"rb")', assigned value is 0
+      oFile = fopen(f->oFile, "rb");
+                   ^
+lzhuf.c:1226:45: note: Null pointer dereference
+      while ((x = fread(&buffer[2], 1, 250, oFile)) > 0) {
+                                            ^
+lzhuf.c:1258:14: warning: If resource allocation fails, then there is a possible null pointer dereference: oFile [nullPointerOutOfResources]
+      fclose(oFile);
+             ^
+lzhuf.c:1166:20: note: Assuming allocation function fails
+      oFile = fopen(f->oFile, "rb");
+                   ^
+lzhuf.c:1166:20: note: Assignment 'oFile=fopen(f->oFile,"rb")', assigned value is 0
+      oFile = fopen(f->oFile, "rb");
+                   ^
+lzhuf.c:1258:14: note: Null pointer dereference
+      fclose(oFile);
+             ^
+lzhuf.c:777:18: error: Uninitialized variable: &crc [uninitvar]
+     if (fwrite (&crc, sizeof(crc), 1, lzhuf->oFile) < 1)
+                 ^
+lzhuf.c:1550:4: error: Memory is allocated but not initialized: ptr [uninitdata]
+  *ptr++ = *buf;
+   ^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+main.c:2407:5: error: Address of local auto-variable assigned to a function parameter. [autoVariables]
+    argv[1] = logfile;
+    ^
+main.c:1346:2: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+ ptr->whichone = whichone;
+ ^
+main.c:1345:15: note: Assuming allocation function fails
+ ptr = malloc (sizeof(J2QTRIGGER));
+              ^
+main.c:1345:15: note: Assignment 'ptr=malloc(sizeof(struct J2QTRIGGER))', assigned value is 0
+ ptr = malloc (sizeof(J2QTRIGGER));
+              ^
+main.c:1346:2: note: Null pointer dereference
+ ptr->whichone = whichone;
+ ^
+main.c:1348:2: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+ ptr->logentry = j2strdup (logentry);
+ ^
+main.c:1345:15: note: Assuming allocation function fails
+ ptr = malloc (sizeof(J2QTRIGGER));
+              ^
+main.c:1345:15: note: Assignment 'ptr=malloc(sizeof(struct J2QTRIGGER))', assigned value is 0
+ ptr = malloc (sizeof(J2QTRIGGER));
+              ^
+main.c:1348:2: note: Null pointer dereference
+ ptr->logentry = j2strdup (logentry);
+ ^
+main.c:1349:2: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+ ptr->next = (void*)0;
+ ^
+main.c:1345:15: note: Assuming allocation function fails
+ ptr = malloc (sizeof(J2QTRIGGER));
+              ^
+main.c:1345:15: note: Assignment 'ptr=malloc(sizeof(struct J2QTRIGGER))', assigned value is 0
+ ptr = malloc (sizeof(J2QTRIGGER));
+              ^
+main.c:1349:2: note: Null pointer dereference
+ ptr->next = (void*)0;
+ ^
+main.c:1368:2: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+ ptr->pattern = j2strdup (item);
+ ^
+main.c:1364:27: note: Assuming allocation function fails
+ J2ATRIGGER *ptr = malloc (sizeof(J2ATRIGGER));
+                          ^
+main.c:1364:27: note: Assignment 'ptr=malloc(sizeof(struct J2ATRIGGER))', assigned value is 0
+ J2ATRIGGER *ptr = malloc (sizeof(J2ATRIGGER));
+                          ^
+main.c:1368:2: note: Null pointer dereference
+ ptr->pattern = j2strdup (item);
+ ^
+main.c:1369:2: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+ ptr->cmd = (void*)0;
+ ^
+main.c:1364:27: note: Assuming allocation function fails
+ J2ATRIGGER *ptr = malloc (sizeof(J2ATRIGGER));
+                          ^
+main.c:1364:27: note: Assignment 'ptr=malloc(sizeof(struct J2ATRIGGER))', assigned value is 0
+ J2ATRIGGER *ptr = malloc (sizeof(J2ATRIGGER));
+                          ^
+main.c:1369:2: note: Null pointer dereference
+ ptr->cmd = (void*)0;
+ ^
+main.c:1370:2: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+ ptr->flags = flags;
+ ^
+main.c:1364:27: note: Assuming allocation function fails
+ J2ATRIGGER *ptr = malloc (sizeof(J2ATRIGGER));
+                          ^
+main.c:1364:27: note: Assignment 'ptr=malloc(sizeof(struct J2ATRIGGER))', assigned value is 0
+ J2ATRIGGER *ptr = malloc (sizeof(J2ATRIGGER));
+                          ^
+main.c:1370:2: note: Null pointer dereference
+ ptr->flags = flags;
+ ^
+main.c:1371:2: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+ ptr->next = (void*)0;
+ ^
+main.c:1364:27: note: Assuming allocation function fails
+ J2ATRIGGER *ptr = malloc (sizeof(J2ATRIGGER));
+                          ^
+main.c:1364:27: note: Assignment 'ptr=malloc(sizeof(struct J2ATRIGGER))', assigned value is 0
+ J2ATRIGGER *ptr = malloc (sizeof(J2ATRIGGER));
+                          ^
+main.c:1371:2: note: Null pointer dereference
+ ptr->next = (void*)0;
+ ^
+main.c:2578:17: warning: If memory allocation fails, then there is a possible null pointer dereference: inbuf [nullPointerOutOfMemory]
+    while(fgets(inbuf,BUFSIZ,fp) != NULLCHAR){
+                ^
+main.c:2576:19: note: Assuming allocation function fails
+    inbuf = malloc(BUFSIZ);
+                  ^
+main.c:2576:19: note: Assignment 'inbuf=malloc(BUFSIZ)', assigned value is 0
+    inbuf = malloc(BUFSIZ);
+                  ^
+main.c:2578:17: note: Null pointer dereference
+    while(fgets(inbuf,BUFSIZ,fp) != NULLCHAR){
+                ^
+
+^
+
+^
+
+^
+mboxfile.c:69:36: warning: If resource allocation fails, then there is a possible null pointer dereference: infile [nullPointerOutOfResources]
+        in_chars = fread(in, 1, 3, infile);
+                                   ^
+mboxfile.c:162:27: note: Assuming allocation function fails
+                fp = fopen(file,READ_BINARY);   /* assume non-ascii */
+                          ^
+mboxfile.c:162:27: note: Assignment 'fp=fopen(file,"r")', assigned value is 0
+                fp = fopen(file,READ_BINARY);   /* assume non-ascii */
+                          ^
+mboxfile.c:163:26: note: Calling function 'uuencode', 1st argument 'fp' value is 0
+                uuencode(fp,m->user,file);
+                         ^
+mboxfile.c:69:36: note: Null pointer dereference
+        in_chars = fread(in, 1, 3, infile);
+                                   ^
+mboxfile.c:166:20: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+            fclose(fp);
+                   ^
+mboxfile.c:162:27: note: Assuming allocation function fails
+                fp = fopen(file,READ_BINARY);   /* assume non-ascii */
+                          ^
+mboxfile.c:162:27: note: Assignment 'fp=fopen(file,"r")', assigned value is 0
+                fp = fopen(file,READ_BINARY);   /* assume non-ascii */
+                          ^
+mboxfile.c:166:20: note: Null pointer dereference
+            fclose(fp);
+                   ^
+
+^
+
+^
+mboxmail.c:147:3: warning: If memory allocation fails, then there is a possible null pointer dereference: sidcopy [nullPointerOutOfMemory]
+ *sidcopy = m->stype; strcpy (sidcopy + 1, argv);
+  ^
+mboxmail.c:145:25: note: Assuming allocation function fails
+ char *sidcopy = malloc (strlen (argv) + 2);
+                        ^
+mboxmail.c:145:25: note: Assignment 'sidcopy=malloc(strlen(argv)+2)', assigned value is 0
+ char *sidcopy = malloc (strlen (argv) + 2);
+                        ^
+mboxmail.c:147:3: note: Null pointer dereference
+ *sidcopy = m->stype; strcpy (sidcopy + 1, argv);
+  ^
+mboxmail.c:228:3: warning: If memory allocation fails, then there is a possible null pointer dereference: sclptr [nullPointerOutOfMemory]
+  sclptr->sid = sidcopy;
+  ^
+mboxmail.c:227:19: note: Assuming allocation function fails
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+mboxmail.c:227:19: note: Assignment 'sclptr=malloc(sizeof(struct J2SIDCAP))', assigned value is 0
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+mboxmail.c:228:3: note: Null pointer dereference
+  sclptr->sid = sidcopy;
+  ^
+mboxmail.c:230:3: warning: If memory allocation fails, then there is a possible null pointer dereference: sclptr [nullPointerOutOfMemory]
+  sclptr->mbox = (J2SIDMBX*)0;
+  ^
+mboxmail.c:227:19: note: Assuming allocation function fails
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+mboxmail.c:227:19: note: Assignment 'sclptr=malloc(sizeof(struct J2SIDCAP))', assigned value is 0
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+mboxmail.c:230:3: note: Null pointer dereference
+  sclptr->mbox = (J2SIDMBX*)0;
+  ^
+mboxmail.c:232:3: warning: If memory allocation fails, then there is a possible null pointer dereference: sclptr [nullPointerOutOfMemory]
+  sclptr->next = j2sidcaplist;
+  ^
+mboxmail.c:227:19: note: Assuming allocation function fails
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+mboxmail.c:227:19: note: Assignment 'sclptr=malloc(sizeof(struct J2SIDCAP))', assigned value is 0
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+mboxmail.c:232:3: note: Null pointer dereference
+  sclptr->next = j2sidcaplist;
+  ^
+mboxmail.c:239:16: warning: If memory allocation fails, then there is a possible null pointer dereference: sclptr [nullPointerOutOfMemory]
+ for (mclptr = sclptr->mbox; mclptr; mclptr = mclptr->next)
+               ^
+mboxmail.c:227:19: note: Assuming allocation function fails
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+mboxmail.c:227:19: note: Assignment 'sclptr=malloc(sizeof(struct J2SIDCAP))', assigned value is 0
+  sclptr = malloc (sizeof(J2SIDCAP));
+                  ^
+mboxmail.c:239:16: note: Null pointer dereference
+ for (mclptr = sclptr->mbox; mclptr; mclptr = mclptr->next)
+               ^
+mboxmail.c:147:39: error: If memory allocation fail: pointer addition with NULL pointer. [nullPointerArithmeticOutOfMemory]
+ *sidcopy = m->stype; strcpy (sidcopy + 1, argv);
+                                      ^
+mboxmail.c:145:25: note: Assuming allocation function fails
+ char *sidcopy = malloc (strlen (argv) + 2);
+                        ^
+mboxmail.c:145:25: note: Assignment 'sidcopy=malloc(strlen(argv)+2)', assigned value is 0
+ char *sidcopy = malloc (strlen (argv) + 2);
+                        ^
+mboxmail.c:147:39: note: Null pointer addition
+ *sidcopy = m->stype; strcpy (sidcopy + 1, argv);
+                                      ^
+
+^
+
+^
+memlog.c:222:9: error: Resource leak: fp [resourceLeak]
+        return;
+        ^
+memlog.c:125:60: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+      cnt = fread(&MemRec, 1, sizeof(struct memrecstruct), fp);
+                                                           ^
+memlog.c:122:14: note: Assuming allocation function fails
+   fp = fopen(argv[1], "rb");
+             ^
+memlog.c:122:14: note: Assignment 'fp=fopen(argv[1],"rb")', assigned value is 0
+   fp = fopen(argv[1], "rb");
+             ^
+memlog.c:125:60: note: Null pointer dereference
+      cnt = fread(&MemRec, 1, sizeof(struct memrecstruct), fp);
+                                                           ^
+
+^
+mkdep.c:23:33: warning: If resource allocation fails, then there is a possible null pointer dereference: fp [nullPointerOutOfResources]
+    while(fgets(buf,sizeof(buf),fp) != NULL){
+                                ^
+mkdep.c:21:15: note: Assuming allocation function fails
+    fp = fopen(name,"r");
+              ^
+mkdep.c:21:15: note: Assignment 'fp=fopen(name,"r")', assigned value is 0
+    fp = fopen(name,"r");
+              ^
+mkdep.c:23:33: note: Null pointer dereference
+    while(fgets(buf,sizeof(buf),fp) != NULL){
+                                ^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+pushmail.c:99:14: warning: If resource allocation fails, then there is a possible null pointer dereference: fo [nullPointerOutOfResources]
+     fprintf(fo,"%s\n",argv[2]);
+             ^
+pushmail.c:98:16: note: Assuming allocation function fails
+     fo = fopen(npath,"w");
+               ^
+pushmail.c:98:16: note: Assignment 'fo=fopen(npath,"w")', assigned value is 0
+     fo = fopen(npath,"w");
+               ^
+pushmail.c:99:14: note: Null pointer dereference
+     fprintf(fo,"%s\n",argv[2]);
+             ^
+pushmail.c:102:15: warning: If resource allocation fails, then there is a possible null pointer dereference: fo [nullPointerOutOfResources]
+      fprintf(fo,"%s",strp);
+              ^
+pushmail.c:98:16: note: Assuming allocation function fails
+     fo = fopen(npath,"w");
+               ^
+pushmail.c:98:16: note: Assignment 'fo=fopen(npath,"w")', assigned value is 0
+     fo = fopen(npath,"w");
+               ^
+pushmail.c:102:15: note: Null pointer dereference
+      fprintf(fo,"%s",strp);
+              ^
+pushmail.c:104:13: warning: If resource allocation fails, then there is a possible null pointer dereference: fo [nullPointerOutOfResources]
+     fclose(fo);
+            ^
+pushmail.c:98:16: note: Assuming allocation function fails
+     fo = fopen(npath,"w");
+               ^
+pushmail.c:98:16: note: Assignment 'fo=fopen(npath,"w")', assigned value is 0
+     fo = fopen(npath,"w");
+               ^
+pushmail.c:104:13: note: Null pointer dereference
+     fclose(fo);
+            ^
+
+^
+
+^
+rip.c:1393:21: warning: If resource allocation fails, then there is a possible null pointer dereference: Rip_trace_file [nullPointerOutOfResources]
+            fprintf(Rip_trace_file, "%.24s - ", timestr);
+                    ^
+rip.c:1392:35: note: Assuming allocation function fails
+            Rip_trace_file = fopen(Rip_trace_fname, APPEND_TEXT);
+                                  ^
+rip.c:1392:35: note: Assignment 'Rip_trace_file=fopen(Rip_trace_fname,"a+")', assigned value is 0
+            Rip_trace_file = fopen(Rip_trace_fname, APPEND_TEXT);
+                                  ^
+rip.c:1393:21: note: Null pointer dereference
+            fprintf(Rip_trace_file, "%.24s - ", timestr);
+                    ^
+rip.c:1396:22: warning: If resource allocation fails, then there is a possible null pointer dereference: Rip_trace_file [nullPointerOutOfResources]
+            vfprintf(Rip_trace_file, errstr, argptr);
+                     ^
+rip.c:1392:35: note: Assuming allocation function fails
+            Rip_trace_file = fopen(Rip_trace_fname, APPEND_TEXT);
+                                  ^
+rip.c:1392:35: note: Assignment 'Rip_trace_file=fopen(Rip_trace_fname,"a+")', assigned value is 0
+            Rip_trace_file = fopen(Rip_trace_fname, APPEND_TEXT);
+                                  ^
+rip.c:1396:22: note: Null pointer dereference
+            vfprintf(Rip_trace_file, errstr, argptr);
+                     ^
+rip.c:1398:21: warning: If resource allocation fails, then there is a possible null pointer dereference: Rip_trace_file [nullPointerOutOfResources]
+            fprintf(Rip_trace_file, "\n");
+                    ^
+rip.c:1392:35: note: Assuming allocation function fails
+            Rip_trace_file = fopen(Rip_trace_fname, APPEND_TEXT);
+                                  ^
+rip.c:1392:35: note: Assignment 'Rip_trace_file=fopen(Rip_trace_fname,"a+")', assigned value is 0
+            Rip_trace_file = fopen(Rip_trace_fname, APPEND_TEXT);
+                                  ^
+rip.c:1398:21: note: Null pointer dereference
+            fprintf(Rip_trace_file, "\n");
+                    ^
+rip.c:1399:20: warning: If resource allocation fails, then there is a possible null pointer dereference: Rip_trace_file [nullPointerOutOfResources]
+            fclose(Rip_trace_file);
+                   ^
+rip.c:1392:35: note: Assuming allocation function fails
+            Rip_trace_file = fopen(Rip_trace_fname, APPEND_TEXT);
+                                  ^
+rip.c:1392:35: note: Assignment 'Rip_trace_file=fopen(Rip_trace_fname,"a+")', assigned value is 0
+            Rip_trace_file = fopen(Rip_trace_fname, APPEND_TEXT);
+                                  ^
+rip.c:1399:20: note: Null pointer dereference
+            fclose(Rip_trace_file);
+                   ^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+smtpserv.c:2132:17: warning: If resource allocation fails, then there is a possible null pointer dereference: sfile [nullPointerOutOfResources]
+        fprintf(sfile,"%ld",++sequence);
+                ^
+smtpserv.c:2131:22: note: Assuming allocation function fails
+        sfile = fopen(sfilename,WRITE_TEXT);
+                     ^
+smtpserv.c:2131:22: note: Assignment 'sfile=fopen(sfilename,"w")', assigned value is 0
+        sfile = fopen(sfilename,WRITE_TEXT);
+                     ^
+smtpserv.c:2132:17: note: Null pointer dereference
+        fprintf(sfile,"%ld",++sequence);
+                ^
+smtpserv.c:2133:16: warning: If resource allocation fails, then there is a possible null pointer dereference: sfile [nullPointerOutOfResources]
+        fclose(sfile);
+               ^
+smtpserv.c:2131:22: note: Assuming allocation function fails
+        sfile = fopen(sfilename,WRITE_TEXT);
+                     ^
+smtpserv.c:2131:22: note: Assignment 'sfile=fopen(sfilename,"w")', assigned value is 0
+        sfile = fopen(sfilename,WRITE_TEXT);
+                     ^
+smtpserv.c:2133:16: note: Null pointer dereference
+        fclose(sfile);
+               ^
+
+^
+snmpd.c:146:10: warning: If memory allocation fails, then there is a possible null pointer dereference: incoming_community [nullPointerOutOfMemory]
+ memcpy (incoming_community, community, len);
+         ^
+snmpd.c:145:36: note: Assuming allocation function fails
+ char *incoming_community = malloc (len + 1);
+                                   ^
+snmpd.c:145:36: note: Assignment 'incoming_community=malloc(len+1)', assigned value is 0
+ char *incoming_community = malloc (len + 1);
+                                   ^
+snmpd.c:146:10: note: Null pointer dereference
+ memcpy (incoming_community, community, len);
+         ^
+snmpd.c:154:34: warning: If memory allocation fails, then there is a possible null pointer dereference: incoming_community [nullPointerOutOfMemory]
+  if (!strcmp (ptr->rocommunity, incoming_community))
+                                 ^
+snmpd.c:145:36: note: Assuming allocation function fails
+ char *incoming_community = malloc (len + 1);
+                                   ^
+snmpd.c:145:36: note: Assignment 'incoming_community=malloc(len+1)', assigned value is 0
+ char *incoming_community = malloc (len + 1);
+                                   ^
+snmpd.c:154:34: note: Null pointer dereference
+  if (!strcmp (ptr->rocommunity, incoming_community))
+                                 ^
+snmpd.c:992:6: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+     ptr->rocommunity = strdup (argv[2]);
+     ^
+snmpd.c:990:19: note: Assuming allocation function fails
+     ptr = malloc (sizeof(J2SNMPACL));
+                  ^
+snmpd.c:990:19: note: Assignment 'ptr=malloc(sizeof(struct J2SNMPACL))', assigned value is 0
+     ptr = malloc (sizeof(J2SNMPACL));
+                  ^
+snmpd.c:992:6: note: Null pointer dereference
+     ptr->rocommunity = strdup (argv[2]);
+     ^
+snmpd.c:997:7: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+      ptr->ippattern = (char*)0;
+      ^
+snmpd.c:990:19: note: Assuming allocation function fails
+     ptr = malloc (sizeof(J2SNMPACL));
+                  ^
+snmpd.c:990:19: note: Assignment 'ptr=malloc(sizeof(struct J2SNMPACL))', assigned value is 0
+     ptr = malloc (sizeof(J2SNMPACL));
+                  ^
+snmpd.c:997:7: note: Null pointer dereference
+      ptr->ippattern = (char*)0;
+      ^
+snmpd.c:999:6: warning: If memory allocation fails, then there is a possible null pointer dereference: ptr [nullPointerOutOfMemory]
+     ptr->nxt = j2snmpacl;
+     ^
+snmpd.c:990:19: note: Assuming allocation function fails
+     ptr = malloc (sizeof(J2SNMPACL));
+                  ^
+snmpd.c:990:19: note: Assignment 'ptr=malloc(sizeof(struct J2SNMPACL))', assigned value is 0
+     ptr = malloc (sizeof(J2SNMPACL));
+                  ^
+snmpd.c:999:6: note: Null pointer dereference
+     ptr->nxt = j2snmpacl;
+     ^
+snmpd.c:147:23: error: If memory allocation fail: pointer addition with NULL pointer. [nullPointerArithmeticOutOfMemory]
+ *(incoming_community + len) = 0;
+                      ^
+snmpd.c:145:36: note: Assuming allocation function fails
+ char *incoming_community = malloc (len + 1);
+                                   ^
+snmpd.c:145:36: note: Assignment 'incoming_community=malloc(len+1)', assigned value is 0
+ char *incoming_community = malloc (len + 1);
+                                   ^
+snmpd.c:147:23: note: Null pointer addition
+ *(incoming_community + len) = 0;
+                      ^
+
+^
+
+^
+
+^
+
+^
+sort.c:201:3: error: Resource leak: out [resourceLeak]
+  return;
+  ^
+tcpcmd.c:624:1: error: Unmatched '{'. Configuration: 'MSDOS'. [syntaxError]
+{
+^
+tcpcmd.c:624:1: error: Unmatched '{'. Configuration: 'MSDOS;__TURBOC__'. [syntaxError]
+{
+^
+tcpcmd.c:624:1: error: Unmatched '{'. Configuration: 'UNIX;_BIG_ENDIAN;sun'. [syntaxError]
+{
+^
+tcpcmd.c:624:1: error: Unmatched '{'. Configuration: 'UNIX;_LITTLE_ENDIAN;sun'. [syntaxError]
+{
+^
+tcpcmd.c:624:1: error: Unmatched '{'. Configuration: 'UNIX;sun'. [syntaxError]
+{
+^
+tcpcmd.c:624:1: error: Unmatched '{'. Configuration: 'UNIX;sun;MSDOS'. [syntaxError]
+{
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+timer.c:217:13: warning: Uninitialized variable: val [uninitvar]
+    return (val == EALARM) ? 0 : -1;
+            ^
+timer.c:212:32: note: Assuming condition is false
+    while(Curproc->alarm.state == TIMER_RUN){
+                               ^
+timer.c:217:13: note: Uninitialized variable: val
+    return (val == EALARM) ? 0 : -1;
+            ^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+ufgets.c:64:17: error: Common realloc mistake: 'buffer' nulled but not freed upon failure [memleakOnRealloc]
+                buffer = (char*)realloc(buffer, size);
+                ^
+
+^
+
+^
+unixasy.c:193:52: error: Array 'speed_table[1]' accessed at index 1, which is out of bounds. [arrayIndexOutOfBounds]
+ while (speed_table[i].speed < speed && speed_table[i+1].speed > 0)
+                                                   ^
+unixasy.c:192:6: note: Assignment 'i=0', assigned value is 0
+ i = 0;
+     ^
+unixasy.c:193:52: note: Array index out of bounds
+ while (speed_table[i].speed < speed && speed_table[i+1].speed > 0)
+                                                   ^
+
+^
+uudecode.c:32:22: warning: If resource allocation fails, then there is a possible null pointer dereference: infile [nullPointerOutOfResources]
+    fgets(line, 100, infile);
+                     ^
+uudecode.c:28:19: note: Assuming allocation function fails
+    infile = fopen(argv[1], "r");
+                  ^
+uudecode.c:28:19: note: Assignment 'infile=fopen(argv[1],"r")', assigned value is 0
+    infile = fopen(argv[1], "r");
+                  ^
+uudecode.c:32:22: note: Null pointer dereference
+    fgets(line, 100, infile);
+                     ^
+uudecode.c:35:29: warning: If resource allocation fails, then there is a possible null pointer dereference: infile [nullPointerOutOfResources]
+    while (fgets(line, 100, infile), strncmp(line, "end", 3))
+                            ^
+uudecode.c:28:19: note: Assuming allocation function fails
+    infile = fopen(argv[1], "r");
+                  ^
+uudecode.c:28:19: note: Assignment 'infile=fopen(argv[1],"r")', assigned value is 0
+    infile = fopen(argv[1], "r");
+                  ^
+uudecode.c:35:29: note: Null pointer dereference
+    while (fgets(line, 100, infile), strncmp(line, "end", 3))
+                            ^
+
+^
+
+^
+varacli.c:354:3: warning: If memory allocation fails, then there is a possible null pointer dereference: p [nullPointerOutOfMemory]
+  p->command = j2strdup( command );
+  ^
+varacli.c:353:31: note: Assuming allocation function fails
+  p = (struct varacmd *)malloc( sizeof( struct varacmd ));
+                              ^
+varacli.c:353:7: note: Assignment 'p=(struct varacmd*)malloc(sizeof(struct varacmd))', assigned value is 0
+  p = (struct varacmd *)malloc( sizeof( struct varacmd ));
+      ^
+varacli.c:354:3: note: Null pointer dereference
+  p->command = j2strdup( command );
+  ^
+varacli.c:355:11: warning: If memory allocation fails, then there is a possible null pointer dereference: p [nullPointerOutOfMemory]
+  strupr( p->command );
+          ^
+varacli.c:353:31: note: Assuming allocation function fails
+  p = (struct varacmd *)malloc( sizeof( struct varacmd ));
+                              ^
+varacli.c:353:7: note: Assignment 'p=(struct varacmd*)malloc(sizeof(struct varacmd))', assigned value is 0
+  p = (struct varacmd *)malloc( sizeof( struct varacmd ));
+      ^
+varacli.c:355:11: note: Null pointer dereference
+  strupr( p->command );
+          ^
+varacli.c:356:3: warning: If memory allocation fails, then there is a possible null pointer dereference: p [nullPointerOutOfMemory]
+  p->next = NULL;
+  ^
+varacli.c:353:31: note: Assuming allocation function fails
+  p = (struct varacmd *)malloc( sizeof( struct varacmd ));
+                              ^
+varacli.c:353:7: note: Assignment 'p=(struct varacmd*)malloc(sizeof(struct varacmd))', assigned value is 0
+  p = (struct varacmd *)malloc( sizeof( struct varacmd ));
+      ^
+varacli.c:356:3: note: Null pointer dereference
+  p->next = NULL;
+  ^
+
+^
+
+^
+
+^
+
+^
+
+^
+
+^
+winrpr.c:137:18: warning: Uninitialized variable: iface->mtu [uninitvar]
+  iomtu = iface->mtu;
+                 ^
+winrpr.c:180:22: note: Calling function 'winrpr_send', 1st argument '&dummy' value is <Uninit>
+ return winrpr_send (&dummy, bp);
+                     ^
+winrpr.c:137:18: note: Uninitialized variable: iface->mtu
+  iomtu = iface->mtu;
+                 ^
+
+^
+wpages.c:95:14: warning: If memory allocation fails, then there is a possible null pointer dereference: to [nullPointerOutOfMemory]
+ if (strchr (to, '%'))
+             ^
+wpages.c:183:27: note: Assuming allocation function fails
+  cp2 = wpage_exp (strdup (*src), 1, 1);
+                          ^
+wpages.c:183:27: note: Calling function 'wpage_exp', 1st argument 'strdup(*src)' value is 0
+  cp2 = wpage_exp (strdup (*src), 1, 1);
+                          ^
+wpages.c:95:14: note: Null pointer dereference
+ if (strchr (to, '%'))
+             ^
+wpages.c:104:17: warning: If memory allocation fails, then there is a possible null pointer dereference: to [nullPointerOutOfMemory]
+  cp2 = strchr (to, '@');
+                ^
+wpages.c:183:27: note: Assuming allocation function fails
+  cp2 = wpage_exp (strdup (*src), 1, 1);
+                          ^
+wpages.c:183:27: note: Calling function 'wpage_exp', 1st argument 'strdup(*src)' value is 0
+  cp2 = wpage_exp (strdup (*src), 1, 1);
+                          ^
+wpages.c:95:13: note: Assuming condition is false
+ if (strchr (to, '%'))
+            ^
+wpages.c:104:17: note: Null pointer dereference
+  cp2 = strchr (to, '@');
+                ^
+wpages.c:364:18: warning: If memory allocation fails, then there is a possible null pointer dereference: who [nullPointerOutOfMemory]
+   cp = strpbrk (who, " )");
+                 ^
+wpages.c:363:17: note: Assuming allocation function fails
+   who = strdup (&name[1]);
+                ^
+wpages.c:363:17: note: Assignment 'who=strdup(&name[1])', assigned value is 0
+   who = strdup (&name[1]);
+                ^
+wpages.c:364:18: note: Null pointer dereference
+   cp = strpbrk (who, " )");
+                 ^
+wpages.c:904:18: warning: If memory allocation fails, then there is a possible null pointer dereference: to [nullPointerOutOfMemory]
+ orgto = strdup (to);
+                 ^
+wpages.c:902:14: note: Assuming allocation function fails
+ to = strdup ((to == NULLCHAR) ? "sysop" : to);
+             ^
+wpages.c:902:14: note: Assignment 'to=strdup((to==(char*)0)?"sysop":to)', assigned value is 0
+ to = strdup ((to == NULLCHAR) ? "sysop" : to);
+             ^
+wpages.c:904:18: note: Null pointer dereference
+ orgto = strdup (to);
+                 ^
+bmutil.c:1777:17: error: Null pointer dereference: m [ctunullpointer]
+    if(recvline(m->user, m->line, MBXLINE) == -1  ||
+                ^
+wpages.c:243:16: note: Calling function wpage_lookup, 3rd argument is null
+  wpage_lookup (&argv[1], (char*)0, (struct mbx*)0);
+               ^
+wpages.c:193:9: note: Calling function mykeywait, 2nd argument is null
+    c = mykeywait (" - use ? (Y/n) ", m);
+        ^
+bmutil.c:1777:17: note: Dereferencing argument m that is null
+    if(recvline(m->user, m->line, MBXLINE) == -1  ||
+                ^

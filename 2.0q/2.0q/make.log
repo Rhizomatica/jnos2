@@ -1,0 +1,278 @@
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o main.o main.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o config.o config.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o version.o version.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o session.o session.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o jheard.o jheard.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o telnet.o telnet.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ftpcli.o ftpcli.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o finger.o finger.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o smtpcli.o smtpcli.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o hop.o hop.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tip.o tip.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nntpcli.o nntpcli.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o dialer.o dialer.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o rlogin.o rlogin.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o callcli.o callcli.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o mailcli.o mailcli.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pop2cli.o pop2cli.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pop3cli.o pop3cli.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o rdate.o rdate.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o look.o look.c
+rm -f clients.a
+ar rcs clients.a telnet.o ftpcli.o finger.o smtpcli.o hop.o tip.o nntpcli.o dialer.o rlogin.o callcli.o mailcli.o pop2cli.o pop3cli.o rdate.o look.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ttylink.o ttylink.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ftpserv.o ftpserv.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o smisc.o smisc.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o smtpserv.o smtpserv.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o convers.o convers.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nntpserv.o nntpserv.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o fingerd.o fingerd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o mboxcmd.o mboxcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o mailbox.o mailbox.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o mboxfile.o mboxfile.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o mboxmail.o mboxmail.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o mboxgate.o mboxgate.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o mailfor.o mailfor.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o bmutil.o bmutil.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o forward.o forward.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tipmail.o tipmail.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o mailutil.o mailutil.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o index.o index.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o expire.o expire.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o calldbd.o calldbd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o buckbook.o buckbook.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pop2serv.o pop2serv.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pop3serv.o pop3serv.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o timed.o timed.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o b2f.o b2f.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o qrz.o qrz.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o fbbfwd.o fbbfwd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o lzhuf.o lzhuf.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o term.o term.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcpgate.o tcpgate.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o http.o http.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o wpages.o wpages.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o merge.o merge.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o sort.o sort.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ufgets.o ufgets.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tnlink.o tnlink.c
+rm -f servers.a
+ar rcs servers.a ttylink.o ftpserv.o smisc.o smtpserv.o convers.o nntpserv.o fingerd.o mboxcmd.o mailbox.o mboxfile.o mboxmail.o mboxgate.o mailfor.o  bmutil.o forward.o tipmail.o mailutil.o index.o expire.o calldbd.o buckbook.o pop2serv.o pop3serv.o timed.o b2f.o qrz.o fbbfwd.o lzhuf.o term.o tcpgate.o http.o wpages.o merge.o sort.o ufgets.o tnlink.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcpcmd.o tcpcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcpuser.o tcpuser.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcptimer.o tcptimer.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcpout.o tcpout.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcpin.o tcpin.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcpsubr.o tcpsubr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcphdr.o tcphdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o udpcmd.o udpcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o udp.o udp.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o udphdr.o udphdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o domain.o domain.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o domhdr.o domhdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ripcmd.o ripcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o rip.o rip.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ipcmd.o ipcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ip.o ip.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o iproute.o iproute.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o iphdr.o iphdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o rtdyngw.o rtdyngw.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o icmpcmd.o icmpcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o icmp.o icmp.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o icmpmsg.o icmpmsg.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o icmphdr.o icmphdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o arpcmd.o arpcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o arp.o arp.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o arphdr.o arphdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o rarp.o rarp.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o netuser.o netuser.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o rspf.o rspf.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o rspfcmd.o rspfcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o rspfhdr.o rspfhdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o bbs10000.o bbs10000.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcpwatch.o tcpwatch.c
+rm -f internet.a
+ar rcs internet.a tcpcmd.o tcpuser.o tcptimer.o tcpout.o tcpin.o tcpsubr.o tcphdr.o udpcmd.o udp.o udphdr.o domain.o domhdr.o ripcmd.o rip.o ipcmd.o ip.o iproute.o iphdr.o rtdyngw.o icmpcmd.o icmp.o icmpmsg.o icmphdr.o arpcmd.o arp.o arphdr.o rarp.o netuser.o rspf.o rspfcmd.o rspfhdr.o bbs10000.o tcpwatch.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ftpsubr.o ftpsubr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o sockcmd.o sockcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o sockuser.o sockuser.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o socket.o socket.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o sockutil.o sockutil.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o iface.o iface.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o timer.o timer.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o cmdparse.o cmdparse.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o mbuf.o mbuf.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o misc.o misc.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pathname.o pathname.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o files.o files.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o kernel.o kernel.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ksubr.o ksubr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o getopt.o getopt.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o wildmat.o wildmat.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o lzw.o lzw.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o devparam.o devparam.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o md5.o md5.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tun.o tun.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o callval.o callval.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o baycom.o baycom.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o multipsk.o multipsk.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o snmpd.o snmpd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o agwpe.o agwpe.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o winrpr.o winrpr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o wlauth.o wlauth.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o j2pwmgr/j2pwrtns.o j2pwmgr/j2pwrtns.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o enet.o enet.c
+rm -f net.a
+ar rcs net.a ftpsubr.o sockcmd.o sockuser.o socket.o sockutil.o iface.o timer.o cmdparse.o mbuf.o misc.o pathname.o files.o kernel.o ksubr.o getopt.o wildmat.o lzw.o devparam.o md5.o tun.o callval.o baycom.o multipsk.o snmpd.o agwpe.o winrpr.o wlauth.o j2pwmgr/j2pwrtns.o enet.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nrcmd.o nrcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nr4user.o nr4user.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nr4timer.o nr4timer.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nr4.o nr4.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nr4subr.o nr4subr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nr4hdr.o nr4hdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nr3.o nr3.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nrs.o nrs.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nrhdr.o nrhdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nr4mail.o nr4mail.c
+rm -f netrom.a
+ar rcs netrom.a nrcmd.o nr4user.o nr4timer.o nr4.o nr4subr.o nr4hdr.o nr3.o nrs.o nrhdr.o nr4mail.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ax25cmd.o ax25cmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ax25user.o ax25user.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ax25.o ax25.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o axheard.o axheard.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ax25aar.o ax25aar.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o lapbtime.o lapbtime.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o lapb.o lapb.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o kiss.o kiss.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o kisspoll.o kisspoll.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ax25subr.o ax25subr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ax25hdr.o ax25hdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ax25mail.o ax25mail.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o axui.o axui.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ax25xdigi.o ax25xdigi.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o fldigi.o fldigi.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o fnvhash.o fnvhash.c
+rm -f ax25.a
+ar rcs ax25.a ax25cmd.o ax25user.o ax25.o axheard.o ax25aar.o lapbtime.o lapb.o kiss.o kisspoll.o ax25subr.o ax25hdr.o ax25mail.o axui.o ax25xdigi.o fldigi.o fnvhash.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o vara.o vara.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o varamail.o varamail.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o varacli.o varacli.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o varacmd.o varacmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o varaptt.o varaptt.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o varamodem.o varamodem.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o varasubr.o varasubr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o varauser.o varauser.c
+rm -f vara.a
+ar rcs vara.a vara.o varamail.o varacli.o varacmd.o varaptt.o varamodem.o varasubr.o varauser.o 
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprs.o aprs.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprssrv.o aprssrv.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsstat.o aprsstat.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsmice.o aprsmice.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsdupe.o aprsdupe.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsbc.o aprsbc.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsdigi.o aprsdigi.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsmsg.o aprsmsg.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsmsgr.o aprsmsgr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsmsgdb.o aprsmsgdb.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprscfg.o aprscfg.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprswx.o aprswx.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsposdb.o aprsposdb.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o vhttp.o vhttp.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsbul.o aprsbul.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsack.o aprsack.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o aprsdat.o aprsdat.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o geometry.o geometry.c
+rm -f aprs.a
+ar rcs aprs.a aprs.o aprssrv.o aprsstat.o aprsmice.o aprsdupe.o aprsbc.o aprsdigi.o aprsmsg.o aprsmsgr.o aprsmsgdb.o aprscfg.o aprswx.o aprsposdb.o vhttp.o aprsbul.o aprsack.o aprsdat.o geometry.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o unix.o unix.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o unixasy.o unixasy.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o dirutil.o dirutil.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o at.o at.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o lcsum.o lcsum.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o xmodem.o xmodem.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o glob.o glob.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o dumbcons.o dumbcons.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o editor.o editor.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o jlocks.o jlocks.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o qsort.o qsort.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o chkstk.o chkstk.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o sysevent.o sysevent.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o j2tmpnam.o j2tmpnam.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o getusage.o getusage.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o j2KLMlists.o j2KLMlists.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o j2strings.o j2strings.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o j2base36.o j2base36.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o activeBID.o activeBID.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o j2base64.o j2base64.c
+rm -f unix.a
+ar rcs unix.a unix.o unixasy.o dirutil.o at.o lcsum.o xmodem.o glob.o dumbcons.o editor.o jlocks.o qsort.o chkstk.o sysevent.o j2tmpnam.o getusage.o j2KLMlists.o j2strings.o j2base36.o activeBID.o j2base64.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o trace.o trace.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o rspfdump.o rspfdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o kissdump.o kissdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ax25dump.o ax25dump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o arpdump.o arpdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nrdump.o nrdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ipdump.o ipdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o icmpdump.o icmpdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o udpdump.o udpdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o tcpdump.o tcpdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ripdump.o ripdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o enetdump.o enetdump.c
+rm -f dump.a
+ar rcs dump.a trace.o rspfdump.o kissdump.o ax25dump.o arpdump.o nrdump.o ipdump.o icmpdump.o udpdump.o tcpdump.o ripdump.o enetdump.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ipv6hdr.o ipv6hdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ipv6route.o ipv6route.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ipv6iface.o ipv6iface.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ipv6.o ipv6.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ipv6link.o ipv6link.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o icmpv6.o icmpv6.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o icmpv6hdr.o icmpv6hdr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o icmpv6cksum.o icmpv6cksum.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ipv6cmd.o ipv6cmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ipv6misc.o ipv6misc.c
+rm -f ipv6.a
+ar rcs ipv6.a ipv6hdr.o ipv6route.o ipv6iface.o ipv6.o ipv6link.o icmpv6.o icmpv6hdr.o icmpv6cksum.o ipv6cmd.o ipv6misc.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o asy.o asy.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ppp.o ppp.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pppcmd.o pppcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pppfsm.o pppfsm.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ppplcp.o ppplcp.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ppppap.o ppppap.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pppipcp.o pppipcp.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pppdump.o pppdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o slhc.o slhc.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o slhcdump.o slhcdump.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o slip.o slip.c
+rm -f ppp.a
+ar rcs ppp.a asy.o ppp.o pppcmd.o pppfsm.o ppplcp.o ppppap.o pppipcp.o pppdump.o slhc.o slhcdump.o slip.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o bootp.o bootp.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o bootpd.o bootpd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o bootpcmd.o bootpcmd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o bootpdip.o bootpdip.c
+rm -f bootp.a
+ar rcs bootp.a bootp.o bootpd.o bootpcmd.o bootpdip.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o hfddrtns.o hfddrtns.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o hfdd.o hfdd.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o winmor.o winmor.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o ptcpro.o ptcpro.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o kam.o kam.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o hfddinit.o hfddinit.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o pk232.o pk232.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o hfddq.o hfddq.c
+rm -f hfdd.a
+ar rcs hfdd.a hfddrtns.o hfdd.o winmor.o ptcpro.o kam.o hfddinit.o pk232.o hfddq.o 
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o nrr.o nrr.c
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall   -c -o newinp.o newinp.c
+rm -f inp.a
+ar rcs inp.a nrr.o newinp.o
+gcc -Wno-misleading-indentation -c -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall -I/usr/include/ncurses -DLCURSES=\"-lncurses\" curses.c -o curses.o
+gcc -Wno-misleading-indentation -c -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall -I/usr/include/ncurses rawcons.c -o rawcons.o
+gcc -Wno-misleading-indentation -c -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall -I/usr/include/ncurses sessmgr.c -o sessmgr.o
+gcc -Wno-misleading-indentation -c -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall -I/usr/include/ncurses ttydriv.c -o ttydriv.o
+rm -f j2curses.a
+ar rcs j2curses.a curses.o rawcons.o sessmgr.o ttydriv.o
+gcc -Wno-misleading-indentation -DUNIX -g3   -fsigned-char -DIPV6 -DETHER -Wall -o jnos main.o config.o version.o session.o \
+jheard.o clients.a servers.a hfdd.a net.a internet.a net.a netrom.a \
+unix.a ax25.a vara.a aprs.a dump.a ipv6.a ppp.a bootp.a inp.a \
+        j2curses.a -lncurses  -lcrypto -lm
+cc -DNOJ2STRLWR j2pwmgr/j2pwmgr.c j2pwmgr/j2pwrtns.c -o jnospwmgr

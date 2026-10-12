@@ -1,0 +1,21 @@
+
+ Send a broadcast on a particular ax25 interfaces - new options 16Oct2024
+
+ Usage : ax bc <iface> [destination call]* [broadcast data]*
+
+  * denotes optional arguments, some examples below :
+
+   ax25 bc ax0         uses ID dest call and preconfigured bctext
+   ax25 bc ax0 APN20P  uses an APRS dest call with preconfigured bctext
+
+   This one below uses an APRS dest call and bypasses preconfigured bctext,
+   but still supporting recent TAG to inject UTC time. You can use this to
+   replace the very limited built in APRS RF beacons as well.
+
+      ax25 bc ax0 APN20P "=4953.22NI09718.35W& #utc utc"
+
+ Note : 'ax25 bcport' and 'ax25 bcinterval' are no longer supported. Instead,
+  use 'at' command as your timer, and make use of 'ax25 bc' with new options.
+
+     at now+0020 "ax25 bc ax0 APN20P \"=4953.22NI09718.35W& #utc utc\"+"
+
