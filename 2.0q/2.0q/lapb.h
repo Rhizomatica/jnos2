@@ -29,8 +29,20 @@
 #define RR  0x01    /* Receiver ready */
 #define RNR 0x05    /* Receiver not ready */
 #define REJ 0x09    /* Reject */
+
+/* 23Jun2026, VE4KLM, Adding selective reject for AX25 V2.2 Sept 2017 */
+#define SREJ 0x13    /* Selective Reject */
+
 #define U   0x03    /* Unnumbered frames */
-#define SABM    0x2f    /* Set Asynchronous Balanced Mode */
+
+#define SABM  0x2f    /* Set Asynchronous Balanced Mode */
+
+/* 24Jun2026, VE4KLM, Set ABM extended mode (modulo 128) */
+#define SABME 0x6f
+
+/* 03Jul2026, VE4KLM, Oops, there is this XID frame */
+#define XID   0xaf
+
 #define DISC    0x43    /* Disconnect */
 #define DM  0x0f    /* Disconnected mode */
 #define UA  0x63    /* Unnumbered acknowledge */
@@ -38,7 +50,13 @@
 #define UI  0x03    /* Unnumbered information */
 #define PF  0x10    /* Poll/final bit */
 
+/* 23June2026, VE4KLM, new PF mask for Modulo 128 */
+#define PF128 0x100    /* Poll/final bit */
+
 #define MMASK   7   /* Mask for modulo-8 sequence numbers */
+
+/* 23June2026, VE4KLM, new MMask for modulo-128 numbers */
+#define MMASK128   127
 
 /* FRMR reason bits */
 #define W   1   /* Invalid control field */
@@ -70,6 +88,12 @@ struct ax25_cb {
         char retrans;       /* A retransmission has occurred */
         char clone;         /* Server-type cb, will be cloned */
         char rxd_I_frame;   /* I-frame received */
+
+#ifdef AX25_V22_Sep2017
+  /* 22June2026, VE4KLM (Maiko), should probably start working on this */
+	char modulo;
+#endif
+
     } flags;
 
     char reason;            /* Reason for connection closing */
@@ -79,9 +103,18 @@ struct ax25_cb {
 #define LB_UNUSED   3       /* Link is redundant - unused */
 
     char response;          /* Response owed to other end */
+#ifdef AX25_V22_Sep2017
+  /*
+   * 07Jul2026, VE4KLM (Maiko), shit, these need to be 16 bits now
+   */
+    int16 vs;            /* Our send state variable */
+    int16 vr;            /* Our receive state variable */
+    int16 unack;         /* Number of unacked frames */
+#else
     char vs;            /* Our send state variable */
     char vr;            /* Our receive state variable */
     char unack;         /* Number of unacked frames */
+#endif
     int maxframe;           /* Transmit flow control level, frames */
     int16 paclen;           /* Maximum outbound packet size, bytes */
     int16 window;           /* Local flow control limit, bytes */

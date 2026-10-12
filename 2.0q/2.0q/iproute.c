@@ -195,6 +195,9 @@ int rxbroadcast;    /* True if packet had link broadcast address */
     struct rtaccess *tpacc; /* temporary for access checking */
 #endif
     int pointer;        /* Relative pointer index for sroute/rroute */
+#ifdef	J2IPSET
+	char *ipstr;
+#endif
 
     if(i_iface != NULLIF)
     {
@@ -238,7 +241,23 @@ int rxbroadcast;    /* True if packet had link broadcast address */
     }
     /* Extract IP header */
     ntohip(&ip,&bp);
-  
+
+#ifdef	J2IPSET
+
+  /* 06Aug2026, Maiko (VE4KLM), ability to use external ipset list */
+
+	j2ipset_init ("badipv4");	// important !!!
+
+	ipstr = inet_ntoa (ip.source);
+
+	if (!j2ipset_test (ipstr))
+	{
+		log (-1, "deny [%s]", ipstr);
+		return -1;
+	}
+
+#endif
+
 #ifndef	IPV6
 	/* 30Jan2023, Maiko, Not necessary anymore with pre_route */
     if(ip.version != IPVERSION){

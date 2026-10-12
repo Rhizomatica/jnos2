@@ -42,8 +42,13 @@
 #include  "ipv6.h"	/* 28Apr2023, Maiko (VE4KLM) */
 #endif
   
-static int axsend __ARGS((struct iface *iface,char *dest,char *source,
-int cmdrsp,int ctl,struct mbuf *data));
+/*
+ * 06Jul2026, Maiko, AX25 Version 2.2 requires a 2 byte control code for info
+ * and supervisory frames, construction of final packet is done in the axsend
+ * function, so I will need a new modulo flag added to the list of parameters
+ * passed to this function. Set modulo = 0 for v2.0 or modulo = 1 for v2.2 !
+ */
+static int axsend __ARGS((struct iface *iface,char *dest,char *source, int cmdrsp,int ctl,struct mbuf *data, int modulo));
 
 #ifdef AXIP
 static int axip_stop __ARGS((struct iface *iface));
@@ -272,17 +277,20 @@ struct mbuf *data;  /* Data field (follows PID) */
     /* Prepend pid to data */
     bp = pushdown(data,1);
     bp->data[0] = (char)pid;
-    return axsend(iface,dest,source,LAPB_COMMAND,UI,bp);
+
+    /* 06Jul2026, Maiko, note new 0 at the end, UI frames always modulo 8 */
+    return axsend(iface,dest,source,LAPB_COMMAND,UI,bp, 0);
 }
 /* Common subroutine for sendframe() and ax_output() */
 static int
-axsend(iface,dest,source,cmdrsp,ctl,data)
+axsend(iface,dest,source,cmdrsp,ctl,data,modulo)
 struct iface *iface;    /* Interface to use; overrides routing table */
 char *dest;     /* Destination AX.25 address (7 bytes, shifted) */
 char *source;       /* Source AX.25 address (7 bytes, shifted) */
 int cmdrsp;     /* Command/response indication */
 int ctl;        /* Control field */
 struct mbuf *data;  /* Data field (includes PID) */
+int modulo;	/* 06Jul2026, VE4KLM (Maiko), new modulo 8|128 flag */
 {
     struct mbuf *cbp;
     struct ax25 addr;
@@ -320,8 +328,30 @@ struct mbuf *data;  /* Data field (includes PID) */
     addr.nextdigi = 0;
   
     /* Allocate mbuf for control field, and fill in */
-    cbp = pushdown(data,1);
-    cbp->data[0] = ctl;
+
+   /*
+    * 06Jul2026, Maiko, I need the modulo 128 flag, so added it as an arg
+    * to this axsend() function, this lets me format the control field for
+    * extended SABME mode as 2 bytes, not the old V2.0 single byte ...
+    *
+    * 27Jul2026, Maiko, U frames are always a single byte, regardless of mod,
+    * so make sure that bits 0 and 1 are both NOT set before sending 2 bytes.
+    *
+    * 27Jul2026, Maiko, U frame is both bits 2 and 1 set, should be using
+    * (control & 3), not (control & 2), and need to make sure result = 3
+    */
+    if (!modulo || ((ctl & 3) == 3))
+    {
+       cbp = pushdown(data,1);
+       cbp->data[0] = ctl;
+    }
+    else
+    {
+       cbp = pushdown(data,2);
+
+       cbp->data[0] = ctl & 0xff;		// lsb
+       cbp->data[1] = (ctl >> 8) & 0xff;	// msb
+    }
   
     if((data = htonax25(&addr,cbp)) == NULLBUF){
         free_p(cbp);    /* Also frees data */
@@ -1046,7 +1076,13 @@ struct mbuf *bp;
         lapb_input(axp,hdr.cmdrsp,bp);
     }
   
-/* General purpose AX.25 frame output */
+/*
+ * General purpose AX.25 frame output
+ *
+ * 06Jul2026, Maiko (VE4KLM), Thank the stars I don't need to add an extra
+ * argument to the sendframe() function for AX25 Version 2.2, instead just
+ * need to modify axsend() to handle 1 control byte vs 2 control bytes :]
+ */
     int
     sendframe(axp,cmdrsp,ctl,data)
     struct ax25_cb *axp;
@@ -1054,7 +1090,11 @@ struct mbuf *bp;
     int ctl;
     struct mbuf *data;
     {
-        return axsend(axp->iface,axp->remote,axp->local,cmdrsp,ctl,data);
+        return axsend(axp->iface,axp->remote,axp->local,
+		cmdrsp,ctl,data, axp->flags.modulo);
+
+ /* 06Jul2026, Maiko, added new flag at end, module 8 or 128 flag */
+
     }
 /* Find a route for an AX.25 address.
  * Code to remove SSID field C/R- and E-bits in ax_lookup(), ax_add() and

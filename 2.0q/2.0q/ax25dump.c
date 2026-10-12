@@ -224,6 +224,10 @@ int16 type;
             return "I";
         case SABM:
             return "SABM";
+        case SABME:
+            return "SABME";
+        case XID:
+            return "XID";
         case DISC:
             return "DISC";
         case DM:
@@ -236,6 +240,8 @@ int16 type;
             return "RNR";
         case REJ:
             return "REJ";
+        case SREJ:
+            return "SREJ";
         case FRMR:
             return "FRMR";
         case UI:

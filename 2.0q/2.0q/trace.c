@@ -28,6 +28,8 @@
 #include "usock.h"
 #endif
 
+#include <stdbool.h> /* 04Aug2026, VE4KLM (Maiko) for ax25 version flag */
+
 #ifdef UNIX
 /* #define usprintf traceusprintf  [obsoleted by new code in usputs...n5knx] */
 /* Therefore, use usprintf or usputs for all trace writes; NEVER use usputc */
@@ -456,7 +458,9 @@ static void synctrace (void *t)
 }
 
 #endif
-  
+
+bool trace_ax25_v2_2 = false;	/* 04Aug2026, VE4KLM (Maiko) ax25 version */
+
 /* Modify or displace interface trace flags */
 int
 dotrace(argc,argv,p)
@@ -472,6 +476,25 @@ void *p;
             showtrace(ifp);
         return 0;
     }
+
+	/*
+	 * 04Aug2026, VE4KLM (Maiko), new trace command 'v2.2', quick and dirty
+	 * way to tell ax25dump routines that we need to decode ax.25 v2.2, not
+	 * the usual ax.25 v2.0, the only difference is extra control byte, and
+	 * the sequence numbers are larger. The ax25dump is 'stateless', so not
+	 * sure how to indicate ax25 minor version, proto field is only major.
+	 */
+    if(strncmp("ax25ver", argv[1], strlen(argv[1])) == 0)
+	{
+		trace_ax25_v2_2 = !trace_ax25_v2_2;
+
+		if (trace_ax25_v2_2)
+			tprintf ("trace configured for ax25 v2.2\n");
+		else
+			tprintf ("trace configured for ax25 v2.0\n");
+        	return 0;
+	}
+
     if((ifp = if_lookup(argv[1])) == NULLIF){
         tprintf(Badinterface,argv[1]);
         return 1;

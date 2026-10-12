@@ -75,7 +75,10 @@ void *p;
                 axp->reason = LB_TIMEOUT;
                 lapbstate(axp,LAPB_DISCONNECTED);
             } else {
-                sendctl(axp,LAPB_COMMAND,SABM|PF);
+     		if (axp->flags.modulo)
+                  sendctl(axp,LAPB_COMMAND,SABME|PF);
+		else
+                  sendctl(axp,LAPB_COMMAND,SABM|PF);
                 start_timer(&axp->t1);
             }
             break;
@@ -87,7 +90,7 @@ void *p;
                 axp->reason = LB_TIMEOUT;
                 lapbstate(axp,LAPB_DISCONNECTED);
             } else {
-                sendctl(axp,LAPB_COMMAND,DISC|PF);
+                 sendctl(axp,LAPB_COMMAND,DISC|PF);
                 start_timer(&axp->t1);
             }
             break;
@@ -156,7 +159,8 @@ static void
 tx_enq(axp)
 register struct ax25_cb *axp;
 {
-    char ctl;
+    // char ctl;
+    int ctl;	// 07Jul2026, Maiko, this needs to be 16 bit int, 2 bytes
     struct mbuf *bp;
   
     /* I believe that retransmitting the oldest unacked
@@ -170,11 +174,16 @@ register struct ax25_cb *axp;
         && (len_p(axp->txq) < axp->pthresh || axp->proto == V1)){
         /* Retransmit oldest unacked I-frame */
         dup_p(&bp,axp->txq,0,len_p(axp->txq));
-        ctl = PF | I | (((axp->vs - axp->unack) & MMASK) << 1)
-        | (axp->vr << 5);
+     if (axp->flags.modulo)
+        ctl = PF128 | I | (((axp->vs - axp->unack) & MMASK128) << 1) | (axp->vr << 9);
+     else
+        ctl = PF | I | (((axp->vs - axp->unack) & MMASK) << 1) | (axp->vr << 5);
         sendframe(axp,LAPB_COMMAND,ctl,bp);
     } else {
-        ctl = len_p(axp->rxq) >= axp->window ? RNR|PF : RR|PF;
+     	if (axp->flags.modulo)
+          ctl = len_p(axp->rxq) >= axp->window ? RNR|PF128 : RR|PF128;
+        else
+         ctl = len_p(axp->rxq) >= axp->window ? RNR|PF : RR|PF;
         sendctl(axp,LAPB_COMMAND,ctl);
     }
     axp->response = 0;
@@ -190,7 +199,10 @@ void *p;
 {
     register struct mbuf *bp;
     struct mbuf *tbp;
-    char control;
+
+    int control; // 06Jul2026, VE4KLM, needs to be an int, not a char
+		 // since for AX25 v2.2 there are 2 bytes sent, not 1
+    
     int sent = 0; /* not used - K5JB */
     int i;
   
@@ -216,9 +228,18 @@ void *p;
      * number of unacknowledged frames reaches the maxframe limit,
      * or when there are no more frames to send
      */
-    while(bp != NULLBUF && axp->unack < axp->maxframe){
+    while(bp != NULLBUF && axp->unack < axp->maxframe)
+    {
+     if (axp->flags.modulo)
+     {
+        control = I | (axp->vs++ << 1) | (axp->vr << 9);
+        axp->vs &= MMASK128;
+     }
+     else
+     {
         control = I | (axp->vs++ << 1) | (axp->vr << 5);
         axp->vs &= MMASK;
+     }
         dup_p(&tbp,bp,0,len_p(bp));
         if(tbp == NULLBUF)
             return; /* Probably out of memory */
@@ -238,9 +259,14 @@ void *p;
         }
         sent++;
         bp = bp->anext;   /* not used */
-        if(!axp->flags.rtt_run){
-        /* Start round trip timer */
-            axp->rtt_seq = (control >> 1) & MMASK;
+        if(!axp->flags.rtt_run)
+	{
+       	   /* Start round trip timer */
+     	   if (axp->flags.modulo)
+             axp->rtt_seq = (control >> 1) & MMASK128;
+     	   else
+             axp->rtt_seq = (control >> 1) & MMASK;
+
             axp->rtt_time = msclock();
             axp->flags.rtt_run = 1;
         }

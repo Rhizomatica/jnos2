@@ -724,6 +724,24 @@ static int fbbdofs(struct fbbpacket *msglst,
    j2alarm(0);
    rip(m->line);
 
+ /*
+  * 18Apr2026, Maiko (VE4KLM), Looks like the ';PM:' shows up here as well,
+  * and make sure to put this in a while loop, might get multiple notes !
+  */
+	while (strnicmp (m->line, ";PM: ", 5) == 0)
+	{
+		rip (m->line);
+		log (m->user, "[%s]", m->line);
+
+		j2alarm(Mbtdiscinit*1000);
+		if(recvline (m->user, m->line, MBXLINE) == -1 ) {
+#ifdef FBBVERBOSELOG
+			log(m->user, RmtDisconnect);
+#endif
+			return 0;
+		}
+   	}
+
    // Make sure we got a "FS " line. Anything else is an error.
    if(strnicmp(m->line,"FS ", 3) != 0) {
       tprintf("FBB Error: Expected 'FS ' string. Received \'%s\' string.\n",m->line);
@@ -1096,6 +1114,7 @@ static int fbbdofs(struct fbbpacket *msglst,
             if ((fsr == '=') || (fsr == 'L') || (fsr == 'E'))
 			{
                msglst[i].accept = fbbDEFER;
+
                // Re-position filepointer to index....
                lseek(idx,m->mbox[msglst[i].number].indexoffset,SEEK_SET);
 

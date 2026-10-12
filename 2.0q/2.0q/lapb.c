@@ -69,9 +69,40 @@ struct mbuf *bp;                /* Rest of frame, starting with ctl */
         free_p(bp);     /* Probably not necessary */
         return -1;
     }
-    type = ftype(control);
+
+   /*
+    * 23Jun2026, VE4KLM, 2 ctrl bytes needed if modulo 128 (extended)
+    * and it is NOT a U frame
+    *
+    * 27Jul2026, Maiko, U frame is both bits 2 and 1 set, should be using
+    * (control & 3), not (control & 2), and need to make sure result = 3.
+    */
+   if (axp->flags.modulo && !((control & 3) == 3))
+   {
+	// 09Jul2026, Maiko, I'm an idiot, LSB is first (little endian) so
+    	// one needs to shift MSB left by 8 bits and bitwise OR with LSB.
+    	control |= (pullchar(&bp) << 8);
+
+	// control <<= 8;
+	// 06Jul2026, Maiko, oops, should OR this, not ADD it :|
+        //control += pullchar(&bp);
+        // control |= pullchar(&bp);
+   }
+
+    type = ftype(control); /* should be fine the way it is for modulo 128 */
     class = type & 0x3;
+
+   /*
+    * 23Jun2026, VE4KLM, PF in a different bit position
+    * 06Jul2026, Maiko, Make sure only if NOT a U frame
+    * 27Jul2026, Maiko, U frame is both bits 2 and 1 set, should be using
+    * (control & 3), not (control & 2), and need to make sure result = 3.
+    */
+   if (axp->flags.modulo && !((control & 3) == 3))
+    pf = (unsigned char)(control & PF128);
+   else
     pf = control & PF;
+
     /* Check for polls and finals */
     if(pf){
         switch(cmdrsp){
@@ -87,8 +118,16 @@ struct mbuf *bp;                /* Rest of frame, starting with ctl */
     switch(class){
         case I:
         case I+2:
+   	/* 23Jun2026, VE4KLM, PF in a different bit position */
+   	if (axp->flags.modulo)
+            ns = (control >> 1) & MMASK128;
+	else
             ns = (control >> 1) & MMASK;
         case S: /* Note fall-thru */
+   	/* 23Jun2026, VE4KLM, PF in a different bit position */
+   	if (axp->flags.modulo)
+            nr = (control >> 9) & MMASK128;
+	else
             nr = (control >> 5) & MMASK;
             break;
     }
@@ -96,6 +135,14 @@ struct mbuf *bp;                /* Rest of frame, starting with ctl */
     switch(axp->state){
         case LAPB_DISCONNECTED:
         switch(type){
+
+	/* 24June2026, VE4KLM (Maiko), Extended mode connect ax25 v2.2 */
+            case SABME:
+                // sendctl(axp,LAPB_RESPONSE,FRMR|pf);
+		// break;
+   		axp->flags.modulo = 1;
+		/* flow through */
+
             case SABM:      /* Initialize or reset link */
         /* This a new incoming connection.
          * Accept if we have enough memory left
@@ -157,6 +204,12 @@ struct mbuf *bp;                /* Rest of frame, starting with ctl */
             break;
         case LAPB_SETUP:
         switch(type){
+	/* 24Jul2026, VE4KLM (Maiko), Extended mode connect ax25 v2.2 */
+            case SABME:
+                // sendctl(axp,LAPB_RESPONSE,FRMR|pf);
+		// break;
+   		axp->flags.modulo = 1;
+		/* flow through */
             case SABM:      /* Simultaneous open */
                 sendctl(axp,LAPB_RESPONSE,UA|pf);
                 break;
@@ -197,6 +250,12 @@ struct mbuf *bp;                /* Rest of frame, starting with ctl */
             break;
         case LAPB_DISCPENDING:
         switch(type){
+	/* 24Jul2026, VE4KLM (Maiko), Extended mode connect ax25 v2.2 */
+            case SABME:
+                // sendctl(axp,LAPB_RESPONSE,FRMR|pf);
+		// break;
+   		axp->flags.modulo = 1;
+		/* flow through */
             case SABM:
                 sendctl(axp,LAPB_RESPONSE,DM|pf);
                 /*drop_axr(axp);*/          /* drop ax25 route */
@@ -221,6 +280,19 @@ struct mbuf *bp;                /* Rest of frame, starting with ctl */
             recovery = 1;    /* fall through */
         case LAPB_CONNECTED:
         switch(type){
+
+		/*
+	    case XID:
+                sendxid (axp,LAPB_RESPONSE,XID|PF128);
+		break;
+		*/
+
+	/* 24Jul2026, VE4KLM (Maiko), Extended mode connect ax25 v2.2 */
+            case SABME:
+                // sendctl(axp,LAPB_RESPONSE,FRMR|pf);
+		// break;
+   		axp->flags.modulo = 1;
+		/* flow through */
             case SABM:
                 sendctl(axp,LAPB_RESPONSE,UA|pf);
 #ifdef SABM_HOLDOFF
@@ -290,6 +362,14 @@ struct mbuf *bp;                /* Rest of frame, starting with ctl */
                 lapbstate(axp,LAPB_SETUP);      /* Re-establish link */
 #endif
                 break;
+
+	/* 23June2026, VE4KLM, AX25 V2.2 Sept 2017, Adding selective reject */
+            case SREJ:
+
+             // what to do here ??? take a look at ackours() call, uggghh
+
+		break;
+
             case RR:
             case RNR:
             case REJ:
@@ -373,10 +453,20 @@ struct mbuf *bp;                /* Rest of frame, starting with ctl */
                     break;
                 }
                 axp->flags.rejsent = NO;
-                axp->vr = (axp->vr+1) & MMASK;
+		/* 06Jul2026, Maiko, after 11 pm */
+   		if (axp->flags.modulo)
+               	  axp->vr = (axp->vr+1) & MMASK128;
+		else
+               	  axp->vr = (axp->vr+1) & MMASK;
                 tmp = len_p(axp->rxq) >= axp->window ? RNR : RR;
                 if(poll)
-                    sendctl(axp,LAPB_RESPONSE,tmp|PF);
+		{
+		   /* 06Jul2026, Maiko, after 11 pm */
+   		   if (axp->flags.modulo)
+                     sendctl(axp,LAPB_RESPONSE,tmp|PF128);
+		   else
+                     sendctl(axp,LAPB_RESPONSE,tmp|PF);
+		}
                 else
                     axp->response = tmp;
                 procdata(axp,bp);
@@ -422,8 +512,15 @@ int16 n;
      * and keep going until we reach the new sequence number.
      * If we try to free a null pointer,
      * then we have a frame reject condition.
+     *
+     * 03Jul2026, Maiko, V2.2 (modulo) support
      */
+
+  if (axp->flags.modulo)
+    oldest = (axp->vs - axp->unack) & MMASK128;
+  else
     oldest = (axp->vs - axp->unack) & MMASK;
+
     while(axp->unack != 0 && oldest != n){
         if((bp = dequeue(&axp->txq)) == NULLBUF){
             /* Acking unsent frame */
@@ -459,7 +556,11 @@ int16 n;
         }
         axp->flags.retrans = 0;
         axp->retries = 0;
-        oldest = (oldest + 1) & MMASK;
+	/* 06Jul2026, Maiko, after 11 pm */
+   	if (axp->flags.modulo)
+          oldest = (oldest + 1) & MMASK128;
+	else 
+          oldest = (oldest + 1) & MMASK;
     }
     if(axp->unack == 0){
         /* All frames acked, stop timeout */
@@ -486,6 +587,10 @@ struct ax25_cb *axp;
 {
     clr_ex(axp);
     axp->retries = 0;
+   /* 06Jul2026, Maiko, after 11 pm */
+   if (axp->flags.modulo)
+    sendctl(axp,LAPB_COMMAND,SABME|PF128);
+   else
     sendctl(axp,LAPB_COMMAND,SABM|PF);
     stop_timer(&axp->t3);
     start_timer(&axp->t1);
@@ -505,9 +610,15 @@ static void
 enq_resp(axp)
 struct ax25_cb *axp;
 {
-    char ctl;
+    //char ctl;
+    int ctl;	// 07Jul2026, Maiko, this needs to be 16 bit now, 2 bytes
   
+   /* 06Jul2026, Maiko, after 11 pm */
+   if (axp->flags.modulo)
+    ctl = len_p(axp->rxq) >= axp->window ? RNR|PF128 : RR|PF128;
+   else
     ctl = len_p(axp->rxq) >= axp->window ? RNR|PF : RR|PF;
+
     sendctl(axp,LAPB_RESPONSE,ctl);
     axp->response = 0;
     stop_timer(&axp->t3);
@@ -518,7 +629,11 @@ inv_rex(axp)
 struct ax25_cb *axp;
 {
     axp->vs -= axp->unack;
-    axp->vs &= MMASK;
+    /* 06Jul2026, Maiko, after 11 pm */
+    if (axp->flags.modulo)
+       axp->vs &= MMASK128;
+    else
+       axp->vs &= MMASK;
     axp->unack = 0;
 }
 /* Send S or U frame to currently connected station */
@@ -529,9 +644,81 @@ int cmdrsp;
 int cmd;
 {
     if((ftype((char)cmd) & 0x3) == S)       /* Insert V(R) if S frame */
-        cmd |= (axp->vr << 5);
+    {
+	   /* 09Jul2026, Maiko, ax25 V2.2 */
+       if (axp->flags.modulo)
+         cmd |= (axp->vr << 9);
+       else
+         cmd |= (axp->vr << 5);
+    }
     return sendframe(axp,cmdrsp,cmd,NULLBUF);
 }
+
+#ifdef NOPE
+
+/* 03Jul2026, VE4KLM (Maiko), attempt to make XID (AX25 V2.2 work) */
+
+/* Compute CCITT CRC-16 over a buffer */
+static int16
+calc_crc(buf,len)
+char *buf;
+unsigned int len;
+{
+/* 16 bit CRC-CCITT stuff. Extracted from Bill Simpson's PPP */
+
+#define FCS_START       0xffff  /* Starting bit string for FCS calculation */
+#define FCS(fcs, c)     (((fcs) >> 8) ^ fcstab[((fcs) ^ (c)) & 0x00ff])
+
+    extern int16 DFAR fcstab[];
+    int16 crc;
+
+    crc = FCS_START;
+    if(len == 0)
+        len = strlen(buf);
+
+    while(len--)
+        crc = FCS(crc,*buf++);
+
+    crc ^= 0xffff;
+    return crc;
+}
+
+unsigned char xidrsp[] = { 0x82, 0x80, 0x00, 0x17, 0x02, 0x02, 0x00, 0x20, 0x03, 0x03, 0x86, 0xa8, 0x02, 0x06, 0x02, 0x04, 0x00, 0x08, 0x01, 0x02, 0x09, 0x02, 0x10, 0x00, 0x0a, 0x01, 0x03 };
+
+int sendxid (struct ax25_cb *axp, int cmdrsp, int cmd)
+{
+    struct mbuf *xid;
+    register char *cp, *xp;
+    int cnt = 27, xnt = 0;
+    int16 crc;
+
+    xid = alloc_mbuf (29);
+
+    /* just kludge this from the document to get things moving */
+
+    cp = xid->data;
+    xp = xidrsp;
+
+    while (cnt)
+    {
+	    *cp++ = *xp++;
+	    cnt--;
+	    xnt++;
+    }
+
+    xid->cnt = xnt;
+  
+    crc = calc_crc (xid->data, xnt);
+  
+    *cp++ = crc &0xff;
+    *cp = (crc >> 8) & 0xff; 
+    xid->cnt += 2;
+
+    return sendframe(axp,cmdrsp,cmd,xid);
+}
+
+#endif
+
 /* defer output with timer, give time for ack to abort retry - K5JB */
 void
 lapb_output(axp)

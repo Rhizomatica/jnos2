@@ -1590,6 +1590,7 @@ void *v1, *v2;
     int script;
     FILE *script_fp;
 #endif
+	char *savecc, *altcc;
 
 #ifdef	WINLINK_SECURE_LOGIN
 #ifdef	DONT_COMPILE	/* 20June2020, Maiko (VE4KLM), now configured with calls list code */
@@ -1676,13 +1677,31 @@ void *v1, *v2;
 	}
 #endif
     	/* open the connection, m->user will be the new socket */
+
+	// log (-1, "cc [%s] m [%s]", cc, m->name);
+
+	savecc = j2strdup (cc);		/* 15Nov2025, cmdparse destructive on 'cc' */
+
     	if(cmdparse(cfwdcmds,cc,(void *)m) == -1)
 		{
-        	free(cc);
-			/* compensate for close_s() in exitbbs */
-        	usesock(Curproc->output);
-        	return (do_fin0_fwd(m));
+			/* 15Nov2025, Maiko, NEW forwarding alternate path (Charles) */
+
+			altcc = strstr (savecc, "ALT ");
+
+			// if (altcc) log (-1, "alt cc [%s] m [%s]", altcc+4, m->name);
+
+			if (altcc) logmbox (m->user, m->name, "trying alternate path");
+
+    		if (!altcc || cmdparse(cfwdcmds,altcc+4,(void *)m) == -1)
+			{
+				free (savecc);	/* 15Nov2025, make sure you do this ! */
+        		free(cc);
+				/* compensate for close_s() in exitbbs */
+        		usesock(Curproc->output);
+        		return (do_fin0_fwd(m));
+			}
     	}
+		free (savecc);	/* make sure you do this ! */
 #ifdef	HFDD
 	}
 #endif
@@ -2319,8 +2338,15 @@ void *p;
 #endif
             setcall(sp.ax->ax25_addr,argv[2]); /* the remote callsign */
 
-            if(argc > 3)  /* process digipeater string; do auto-ax25-route-add */
-                if(connect_filt(argc,argv,sp.ax->ax25_addr,if_lookup(argv[1])) == 0)
+	  	/*
+		 * process digipeater string; do auto-ax25-route-add
+		 *
+		 * 15Nov2025, Maiko, We have to now check for ALT because of the
+		 * new alternate path feature in case a forward fails, if we don't
+		 * check for this, then ALT is treated as a 'bad' digipeater :]
+		 */
+            if((argc > 3) && strcmp (argv[3], "ALT"))
+               if(connect_filt(argc,argv,sp.ax->ax25_addr,if_lookup(argv[1])) == 0)
                     return -1;
 
             if((m->user = j2socket(AF_AX25,SOCK_STREAM,0)) == -1) {
