@@ -1,0 +1,644 @@
+
+ Refresh this page on every visit to ensure you get the latest information.
+
+ NOTE - this README is also available online at the following URL :
+
+   https://www.langelaar.net/jnos2/documents/development.txt
+
+ WARNING !!! Only apply these fixes to JNOS 2.0p - nothing earlier !
+
+ The latest official version 2.0p was released on May 2, 2024
+
+ How to get the latest development code (updates) :
+
+   rsync -av www.langelaar.net::development < official src area >
+
+   cd < official src area >
+
+   make clean ; ./configure ; make
+
+ -----------------
+
+ * Mar 3, 2025 - fixed a mistake I made in the new heard group code back in
+   early December, which resulted in every interface being put in the same
+   heard group, when each should have had their own. Also, I now properly
+   track the Station call in effect for the particular heard group.
+
+   What remains to be done is tracking of last sent time and sent count, so
+   presently, if a heard group is in place, the values are not updated.
+
+   File : ax25cmd.c
+
+ * Feb 20, 2025 - hunting down netrom L4 crashes, and some APRS safety code
+
+    Trying to hunt down a segmentation fault in the netrom circuits code, which
+    has plagued my system for a while now, not sure if it's because I'm running
+    my JNOS on a VM, a malloc bug, no idea ... no files to update yet ...
+
+   Files (STILL TO TODO) : nr3.c, nrcmd.c, aprssrv.c
+
+ * Feb 9, 2025 - fixed an obscure smtp client bug
+
+   A little nasty, if anything, just do this one update ...
+
+  1) If the mqueue sequence number hits 8 digits, then segmentation faults
+     will occur in the SMTP client code, this was hard to find. I actually
+     had to comment out a del_session() call to find this, because GDB was
+     consistently telling me it was inside del_session() which it was not,
+     so after doing that, GDB pointed out a sprintf() call in execjobs.
+
+   smtpcli.c 1836  sprintf(cb->tname,"%s/%s.txt",Mailqdir,cb->jobq->jobname);
+       print cb->tname  $1 = 0x573930 "./spool/mqueue/20208481.txt"
+
+     The lengths of the temporary filenames were suspicious, so then looked
+     at how the pointer was allocated, and bingo. The original code had made
+     assumptions on the length of the temporary (working) files.
+
+     The fix is quite simple - JOBNAME bumped from 13 to 20 ...
+
+     You don't have to 'make clean', just do 'rm smtpcli.o ; make'
+
+   File : smtp.h
+ 
+ * Feb 7, 2025 (version 2.0p.6) - finally some stability :]
+
+  1) When I added capability for ipv6 connect to the APRS internet system, I
+     actually broke the ipv4 side of things. So in the end, it was a case of
+     #else vs #endif - a bad typo on my part ...
+
+  2) One of the WZ0C mods clears stations from the APRS heard list if an ack,
+     or any message for that matter, comes in from the APRS-IS side.
+
+     This creates a routing issue for me in particular, because I am getting
+     packets from both the APRS-IS and my multiple RF ports, so if the order
+     in which I receive the packets is 'wrong', a station gets removed from
+     the APRS heard list, so any reply or attempt to send a new message goes
+     out the wrong RF port (default port is used), because JNOS has no idea
+     where it was last heard, even though the station is still there on RF.
+
+     I'm playing with this, I have it commented out on my system. In reality,
+     there needs to be code put in that says "wait N minutes maybe" before
+     striking a call from APRS heard list, because I would rather it go to
+     the station that is still there possibly waiting for my traffic :]
+
+  2) Fixed a terrible bug I inadvertently created when I introduced the '#utc'
+     tag several months ago. I was 'terminating a string' on something that's
+     not a string, think alloc_mbuf(i), mbuf data - all it takes is even just
+     one byte over the edge (NULL string terminator) to crash JNOS @ random.
+
+     Code cleanup, removed old comments and commented out code.
+
+     Wrote a proper hash function for the heard group stuff, nrhash() was just
+     me being lazy, and it was inaccurate at best, for what is needed. I have
+     scrapped the idea to have the heard group description in the AxHeardFile,
+     just using a hash value now. The heard group descriptions simply need to
+     be defined manually, that's not a big deal, see my home QTH sample cfgs.
+
+  3) Heard groups now saved to AxHeardFile - see related comments above.
+
+  4) Heard groups are now incorporated into the APRS heard List. I had only
+     done heard groups for regular AX25 heard lists in the previous code.
+
+     I still need to add the ability to display all APRS heard groups outside
+     the current (active) heard group - I will do that for the next release.
+
+  5) fnvhash.c - new hash function / program for heard group tracking
+     (the hash is a bit overkill, but interesting to say the least)
+
+   https://en.wikipedia.org/wiki/Fowler-Noll-Vo_hash_function#FNV-1_hash
+
+     You can compile a fnvhash binary if you like (comments in source file)
+
+  6) makefile - added new fnvhash.o to libs
+     (means we have to bump up makefile version tag for configure script)
+
+  7) configure script - bump up the version, because of mod to makefile
+
+  8) version - changed from 2.0p.5 to 2.0p.6
+
+  9) the RSPF functions use al_lookup() - make sure new hgroup arg is passed
+
+   Files : aprssrv.c, ax25cmd.c, axheard.c, aprsstat.c, makefile,
+            configure, version.c, fnvhash.c (new), rspf.c
+
+ -----------------
+
+ * Dec 5, 2024 (version 2.0p.5) - listing of heard groups outside
+    the current (active) heard group, some 'big' changes done.
+
+  1) Examples (console F10 only) of commands :
+
+      ax25 h ptcIIusb              display default heard list
+      ax25 h ptcIIusb +h           same, but with ptcIIusb heard groups
+
+      ax25 h dest ptcIIusb         display default dest heard list
+      ax25 h dest ptcIIusb +h      same, but with ptcIIusb heard groups
+
+      ax25 h digid ptcIIusb        display default digipeated heard list
+      ax25 h digid ptcIIusb +h     same, but with ptcIIusb heard groups
+
+      ax25 h all         display default heard lists for all interfaces
+      ax25 h all +h      same, but with all heard groups included
+
+   The '+h' flag is optional, and was introduced last minute, so before that,
+   the heard groups were always displayed with the default heard lists. I was
+   not sure people wanted that, so I added the '+h' flag. If you have opinion
+   or comments on that, please let me know.
+
+   It's easy enough to comment out, or have some type of override on it in a
+   future release. To be honest, I am not sure how many people will ever use
+   this new feature, so if you don't, nothing really changes at end of day.
+
+  2) If you want to display JUST a particular heard group, you can do this :
+
+      ax25 h 20m
+
+   Provided you already defined a heard group earlier. It does not have to
+   be the current or active heard group, call it up anytime. Remember, you
+   can define or set a current heard group, using command like this one :
+
+      ax25 h group=20m ptcIIusb
+
+   And then change to another one, or another one, or just go back to the
+   original default heard group when JNOS was first started, using :
+
+      ax25 h group=reset ptcIIusb
+
+   Otherwise, it will treat it as an interface, and fail to look it up !
+
+  3) Heard groups are NOT available (yet) at the BBS command prompt
+      (we are talking about the JH command, just heard, not quite yet)
+
+  4) Heard groups are NOT saved (yet) to AxHeardFile, however because of my
+     own needs, one can actually hand edit an existing AxHeardFile and mark
+     in the desired heard group (just append to the end of an entry), such
+     that you can at least load an old AxHeardFile. But, I will probably
+     be the only one to ever use this little trick :]
+
+    Post Note (07Feb2025) - a stupid idea on my part, scrapped in 2.0p.6
+
+   Files : aprssrv.c, ax25.h, ax25cmd.c, axheard.c, version.c
+
+ * Nov 22, 2024 - can now ipv6 connect to APRS internet system
+
+   File : aprssrv.c
+
+ -----------------
+
+ * Nov 13, 2024 (version 2.0p.4) - Development since May of this year
+
+ -----------------
+
+  1) Critical fix of 'at' loop problem - long standing bug, very important
+
+  2) Critical fix of 'attach asy' - long standing bug, very important
+
+  3) Latest ncurses libs and compile failures
+
+  4) Multiple heard lists / groups per port
+
+      (actively being used on my Rx only port - really liking this)
+
+  5) New ax25 bc (broadcast) methodology (expanded to APRS as well)
+
+  6) New #utc tag to embed current (UTC) time inside ax25 broadcast string
+
+  7) Point of entry (POE) callsign - used with the APRS internet system
+
+  8) Heard Lists - Sent does not mean Received ?
+
+  9) Fixed incorrect time stamps in APRS heard list
+
+ 10) Fixed a mistake in APRS mic'e code (ax25 heard destination logging)
+
+ 11) The 'ax25 noip' idea ?
+
+ 12) Cosmetics, versions, gcc compiler issues, broken features, etc
+
+ -----------------
+
+ 1) Critical fix of 'at' loop problem - long standing, very important
+
+  * (May 24, 2024)
+
+  This actually goes back 20+ years ago, possibly before the JNOS 1.11f days,
+  but was really only discovered when Ron (VE3CGR) started reporting lockups,
+  about 3 years ago, almost to the date. Changes to the code in May of 2021
+  have been removed, since they were not relevant to this issue at all.
+
+   Files : at.c, version.c
+
+ 2) Critical fix of 'attach asy' - long standing bug, 30 years, important
+
+  * (September 29, 2024)
+
+  Nino Carrillo (KK4HEJ), Mark Phillips (NI2O, G7LTT) and myself have spent a
+  considerable amount of time trying to get the NinoTNC to work properly with
+  the JNOS 2.0 software. Looking back at when I started using my NinoTNC late
+  last December, it took us just in the last month or two to realize that the
+  kiss stream all along was missing bytes, resulting in corrupt ax25 headers,
+  and incomplete payload data. I think it's safe to say it's finally fixed.
+
+  So anyone checking my archived heard lists, keep in mind there are a lot of
+  junk call signs mixed in with legitimate calls, only for the NinoTNC port.
+
+  The proper way to attach a NinoTNC is now as follows (NO f127 option) :
+
+    attach asy ttyACM1 - ax25 30m 256 256 57600
+
+  Several weeks ago, I ran into an article about the ASYNC_LOW_LATENCY flag,
+  then discovered enforcing the flag instantly fixed corrupt ax25headers, but
+  data was still missing at the tail end of incoming packets, for which Nino
+  was able to provide a fix to the unixasy.c source code. And so, things now
+  seem to be fine - to the point where we discovered we no longer need to use
+  the additional 'f127' argument to the attach command, which up till now was
+  the only way to get JNOS to 'work' with the NinoTNC.
+
+  Analyzing the code afterwards, it is hard to believe this went unnoticed for
+  the probably 30 years it's been around, we're both shaking our heads, and he
+  figures using f127 and the LOW LATENCY flag was mostly masking an underlying
+  bug in the now fixed asy_input () function. I have been running it for a few
+  days, and it seems good now. I have left the LATENCY flag in place, but may
+  try and remove it in the future and see what happens - can always 'arg' it.
+   (the latency flag keeps the kernel a little more busy I have read)
+
+  Tech notes : rxq is always 1, pktsize is always 0, so if you remove all the
+               associated code, it's clear to see a possibility of the second
+               read () happening, data not getting queued, then a free (buf).
+
+  What we need is people to test the crap out of this, not just for a NinoTNC,
+  but for all hardware, like kam, pk232, tiny II, paccomm, teensy, or whatever
+  else you have going on, since the fix applies to anything use 'attach asy'.
+
+   Files : unixasy.c
+
+ 3) Latest ncurses libs and compile failures
+
+  Compilation of the JNOS curses code is failing with newer versions of the
+  ncurses libs that come with more recent linux distributions. The configure
+  script and makefile have now been modified to deal with this issue.
+
+  Before this fix, one would have to edit the JNOS makefile and change :
+
+    ICURSES = -I/usr/include/ncurses
+
+  To this instead (a band aid), but it works (for now) :
+
+    ICURSES = -I/usr/include/ncurses -DNCURSES_INTERNALS
+
+  Note the new version tag for both files 'configure_10Nov2024_v1.19'
+
+   Files : configure, makefile
+
+ 4) Multiple heard lists per port
+
+  * (November 11, 2024)
+
+  The heard list group is now incorporated into the APRS heard list
+
+   Files : aprsstat.c
+
+  * (November 7, 2024)
+
+  Prototype multiple heard list support, very experimental, you MUST do mass
+  compile, because of newly added structure member in the file, ifax25.h :
+
+     make clean ; ./configure ; make
+
+  The help (usage) file explains the syntax, but here is a scenario :
+
+  I have one rig, one robust packet port, it's on 10m during the day, switched
+  to 20m during the night, and sometimes 15m first thing morning or evening. I
+  want to have separate heard lists for all 3 bands, keeping the list for each
+  band or frequency pristine.
+
+  So when I switch my rig to 20m, I need to issue the command below :
+
+    ax h group=20m teensy         # teensy is my robust packet port
+
+  From that point on, any packets coming in are now tagged as being heard on
+  the 20m band, so if you run the 'ax25 h teensy' command, you will no longer
+  see the original 10m heard list, you will only see 20m content, since 20m
+  is now the 'active heard group'.
+
+  When I decide to put the rig back to 10m, I issue this command below :
+
+    ax h group=default teensy         # teensy is my robust packet port
+
+  which resets the active heard group back to the regular heard list, and if
+  you were to run the 'ax25 h teensy' command, the original 10m entries will
+  reappear again, with the 20m ones not displayed, since they are tagged as
+  being in a different group.
+
+  One last change I need to make is to allow display of a particular heard
+  list group outside of the active heard group. Right now you can't run the
+  command 'ax25 h 20m', and 'ax25 h all' will not show the heard groups. In
+  fact it makes more sense to use 'ax25 h teensy 20m' since you could easily
+  have multiple ports for the same band, you get the idea. I'm working on it
+  still, so just keep in mind 'ax25h h teensy' functions on active group.
+
+  You can have as many heard list groups as you like, I am not 100 percent on
+  my choice of the term 'group', but again, this is a prototype. I am actively
+  using this feature on my live heard lists now, very useful for monitoring :
+
+    https://www.langelaar.net/jnos2/live/heard/heard.txt
+
+  I am reconsidering ax25 heard command syntax again. It does not feel right,
+  probably what others are thinking or annoyed at. As to why it was decided to
+  change it when the digid and dest heard options got put in, no idea, sorry,
+  so I was looking at original JNOS syntax the other day, and am thinking of
+  gravitating back that way, comments are more then welcome on this, thanks.
+
+   Files : ax25.h, axheard.c, ifax25.h, ax25cmd.c, usage/ax25/heard.txt
+
+ 5) New ax25 bc (broadcast) methodology (expanded to APRS as well)
+
+  * (November 8, 2024) - examples
+
+  The old way of using ax25 bc commands :
+
+    ax25 bctext "winnipeg"
+    ax25 bcinterval 600
+    ax25 bcport ax0
+    ax25 bcport ax3
+
+  The above would be replaced with this new way :
+
+    ax25 bctext "winnipeg"
+    at now+0010 "ax25 bc ax0+"
+    at now+0010 "ax25 bc ax3+"
+
+  If you want to use a destcall other than ID on ax3 :
+
+    ax25 bctext "winnipeg"
+    at now+0010 "ax25 bc ax0+"
+    at now+0010 "ax25 bc ax3 CQ+"
+
+  If you want to use a unique bctext on ax2 and ax3 :
+
+    ax25 bctext "winnipeg"
+    at now+0010 "ax25 bc ax0+"
+    at now+0010 "ax25 bc ax2 CQ \"custom text #utc utc\"+"
+    at now+0010 "ax25 bc ax3 ID \"winnipeg #utc utc\"+"
+
+   * note, you have to specify destcall in this case, even for ID
+
+  And for ultimate flexibilty in destcall, bctext, and timing intervals :
+
+    at now+0030 "ax25 bc ax0 ID \"winnipeg #utc utc\"+"
+    at 10 "ax25 bc ax2 ID \"keep alive\""
+    at now+0015 "ax25 bc ax3 CQ \"rural net #utc\"+"
+    at 40 "ax25 bc ax2 ID \"keep alive\""
+
+  The APRS rf broadcasts are very hardcoded, very limiting, and only to the
+  so called default APRS port, so if you have something like this below :
+
+    aprs bc rftimer 30
+    aprs bc rfver off
+    aprs bc rfstat "www.langelaar.net/radio/ve4klm/station"
+    aprs bc rfpos "4953.22NI09718.35W& #utc utc"
+
+  You can replace the above with the following instead :
+
+    at now+0030 "ax25 bc ax0 APN20P \">www.langelaar.net/radio/ve4klm\"+"
+    pause 1
+    at now+0030 "ax25 bc ax0 APN20P \"=4953.22NI09718.35W& #utc utc\"+"
+
+  AND you can now broadcast APRS on any, and as many, ports as needed ...
+
+  One thing to note about the 'at' approach, you have to wait for the first
+  timer expiry for the broadcasts to go out, I am thinking of putting in an
+  option to tell 'at' to do it immediately for the first time. If you really
+  need to have it go out immediately, then just execute the command directly
+  as soon as JNOS starts. To cut down on multiple entries, consider putting
+  your commands in a .nos file, then use 'at' to source the file, and then
+  you can also directly source the file, really cuts down on the clutter.
+
+  * (October 21, 2024)
+
+  Some minor edits to ax25cmd.c and usage/ax25/bc.txt
+
+ Note : 'ax25 bcport' and 'ax25 bcinterval' are no longer supported, instead,
+         use 'at' command as a timer, and make use of the enhanced 'ax25 bc',
+         with the new options - put in as many 'at' entries as needed ...
+
+  Removed the very limited RF beacon code from the APRS source, the same
+  argument as above, so the following commands are no longer supported :
+
+    aprs bc [rfver] [on|off]
+    aprs bc [rfstat|rfpos] [data]
+    aprs bc [rftimer] [minutes]
+
+  They are still listed, but will not do anything (to be removed later), and
+  there is more work to be done with other 'still in place' timer code ...
+
+   Files : ax25cmd.c, usage/ax25/bc.txt, aprsbc.c, newax25bc.example.nos
+
+  * (October 16, 2024)
+
+  Perhaps a radical change to the overall 'ax25 bc' methodology - why ???
+
+  I have been wanting to do this for a long time, most of it came about due
+  to the way my APRS system has evolved over the years, and noting how much
+  unnecessary timer code exists within JNOS for even the most simplistic of
+  functions. To me it makes so much more sense to just add a few options to
+  the existing 'ax25 bc' command, which can then be used in conjunction with
+  the 'ultimate JNOS timer', also known as the 'at' command.
+
+  For instance, my existing APRS rf broadcasts are internally hardcoded to a
+  single port. The new options solve a huge problem for me, and provides the
+  user ultimate flexibility in how they can broadcast any number and type of
+  beacons or data, to any destination calls, on any and all ports (ifaces).
+
+  Note : the new usage file (with examples, so you get the idea) and a
+   very basic autoexec.nos so you can play around and see ...
+
+   Files : ax25cmd.c, usage/ax25/bc.txt, newax25bc.example.nos
+
+ 6) New #utc tag to embed current (UTC) time inside ax25 broadcast string
+
+  * (September 7, 2024)
+
+  New '#utc' tag for ax25 bctext string, so that when a broadcast goes out,
+  the tag gets replaced with the current time (in UTC). This is very useful
+  to me when trying to parse the findu raw data stream to see exactly when
+  another station heard me, since right now all you see is static text, so
+  it all looks the same.
+
+  Couple of examples - global definition, and/or per interface (port) :
+
+    ax25 bctext "winnipeg #utc gmt"
+
+    ifconfig teensy ax25 bctext "winnipeg rpr #utc utc"
+
+ 7) Point of entry (POE) callsign - used with the APRS internet system
+
+  * (October 3, 2024)
+
+  The point of entry (POE) callsign sent to the APRS internet system should be
+  that of the interface on which the APRS data arrives, and not the logon call
+  used to sign into the APRS internet system. My JNOS has multiple interfaces,
+  each with their own callsign ; the logon call is just a general system call,
+  no association with any interfaces, so all the APRS internet system really
+  knows is the data came from my overall system, which could disrupt message
+  routing, tracing for sure, and messages getting overlooked or 'lost' ...
+
+ 8) Heard Lists - Sent does not mean Received ?
+
+  * (October 3, 2024)
+
+  Noticing outgoing ax25 broadcasts are showing up in the heard list, which to
+  me is confusing, and just pollutes my list - "sent does not mean received".
+
+  Add '#define HEARDLIST_MYCALLS' in your config.h if you disagree.
+
+   Files : aprs.[ch] ax25.c
+
+ 9) Fixed incorrect time stamps in APRS heard list
+
+  * (July 1, 2024)
+
+  Fixed incorrect time stamps on APRS heard list (when loaded from file)
+
+   File : aprsstat.c
+
+ 10) Fixed a mistake in APRS mic'e code (ax25 heard destination logging)
+
+  * (May 24, 2024)
+
+  Fixed a mistake I made in ax25.c last September, in the code that keeps
+  any APRS mic'e packets from filling up the ax25 heard destination list.
+
+   Files : ax25.c
+
+ 11) The 'ax25 noip' idea ?
+
+  An experimental flag to disallow IP on AX25 ports ...
+
+  * (June 16, 2024)
+
+  Mark Phillips sent an update, which shows me how much I have forgotten in
+  the form of JNOS commands to deal with things like disallowing ip traffic
+  on particular ports. It's as simple as using an existing JNOS command :
+
+    ip access deny any all all <slow rf port>
+
+   So chances are, the new 'ax25 noip' feature won't make next official
+
+  * (June 2, 2024)
+
+  Corrected a mistake I made in the 'ax25 noip' code
+
+   Files : ax25cmd.c, ax25.c, iproute.c
+
+  * (May 24, 2024)
+
+  New command, 'ax25 noip [iface]', works like a toggle. This is a very
+  experimental feature, and I have no easy way to test it, since I have
+  not played with IP over AX25 for a long long time - hopefully works.
+
+  * Post note (June 16) - probably don't need this command anymore, since
+    the existing JNOS 'ip access' command can do the same thing already.
+
+   Files : ax25cmd.c, ax25.c, iproute.c, iface.h, version.c
+
+  This bumps the JNOS version to 2.0p.1
+
+ 12) Cosmetics, versions, gcc compiler issues, broken features, etc
+
+  * (November 11, 2024)
+
+  Commented out combined heard list code, it's no longer needed, added a few
+  new lines here and there to better space out crowded heard list displays.
+
+   File : aprsstat.c
+
+  * (November 10, 2024)
+
+  Commenting out a few WZ0C debugs, filling up APRS master.log, and commented
+  out several unused variables, since the compiler was complaining about it.
+
+   File : aprssrv.c
+
+  * (September 7, 2024)
+
+  Addeding a few new lines for a less crowded 'ax25 h all' listing ?
+
+  This bumps the JNOS version to 2.0p.3 - more changes coming still
+
+   Files : ax25cmd.c, version.c
+
+  * (June 30, 2024)
+
+  Forced to make changes related to the new gcc version 14, which seems to
+  have appeared on my latest slacklive diskless system. It is fussier then
+  previous versions. For instance, './configure' was reporting no compiler
+  or make, when in fact they were installed. As well, several source files
+  refused to compile, noting this compiler is strict on the following :
+
+    -Wreturn-mismatch, -Wimplicit-function-declaration
+
+  This code should now compile if you #undef EA5HVK_VARA, #undef APRSD in
+  your config.h file. I have not tested the stability or functionality of
+  doing so, since I always define them, but some people had mentioned it.
+
+  The APRS flag 'aprs_txenable' is now an unused flag. I reverted an APRS
+  mod to the original code in ax25.c, since I'm not so sure about it now.
+
+   Files : ax25.c, axheard.c, makefile, configure, ipdump.c, aprsbul.c,
+            winrpr.c, agwpe.c, wpages.c, version.c
+
+  This bumps the JNOS version to 2.0p.2
+
+  * (June 1, 2024)
+
+  Backed out of a modification done back in 2010, after several sysops have
+  basically told me over the past few years that the L> and L< BBS commands
+  are (were) broke(n). Add the following to config.h if you don't agree :
+
+    #define K6FSH_CUSTOM_2010
+
+   Files : bmutil.c
+
+ -------
+
+ * Just some of the things I want to do :
+
+  a) I would like to have the option to use 'Time' instead of 'Since',
+     on ax25 heard lists, much easier to visualize when a station was
+     last heard if you have the actual time, not since it was heard.
+
+  b) start a new documentation project (ha ha ha, funny)
+
+ * Just some of the things that need doing :
+
+  a) fix index corruption after use of "MM" and "MC"
+
+  b) the web based (port 45845) APRS message center is locked to the
+     callsign used to logon to the APRS internet system, which isn't
+     useful if I want to use the message center to interact with any
+     stations on my multiple radio interfaces. The user needs to be
+     able to switch their source call and/or outgoing interface.
+
+  c) noticing any station in the APRS heard list seems to be removed
+     from the list, if there is even 'a minor amount' of involvement
+     with the APRS internet system in passing content or message.
+
+  d) need to better log and notify sysop of the rare USB device drop
+     outs, the code in unixasy.c only prints to the console. I would
+     like it logged, and with more detail - the USB interface for my
+     teensy modem has dropped out, then reappeared, a few times over
+     the past year or so. The only option is to re-attach the device,
+     which right now means restarting JNOS - there's go to be a more
+     creative way to deal with this ?
+
+  e) rethink the TAP interface design
+
+  f) complete and fix or redesign my very dated INP3 implementation
+
+  g) fit in the FlexNet protocol
+ 
+ -------
+
+ Copyright (C) 2004-2024 by Maiko Langelaar / VE4KLM
+
