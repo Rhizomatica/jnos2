@@ -1,0 +1,142 @@
+<html>
+<head>
+<title>VE4KLM / Mercury V2 OFDM Software Modem and JNOS 2.0</title>
+<style>
+body { font-family: Arial; font-size: 20px; }
+a { text-decoration: none; }
+a:hover, a:active, a:focus { color: blue; }
+</style>
+</head
+<body>
+<center>
+<p><b> Experimenting with Mercury V2 OFDM Software Modem and JNOS 2.0 </b></p>
+<hr style="width: 50%;">
+<strong><i> Trying to keep the Radio in Amateur Radio </i></strong>
+</center>
+<h4>Create a JNOS 2.0 test environment</h4>
+<p align="left" style="width: 80%;">
+<pre>
+  mkdir /jnos
+  cd /jnos
+  wget https://www.langelaar.net/jnos2/live/mercnos.tar.gz --no-check-certificate
+  mkdir rte
+  cd rte
+  tar xvzf ../mercnos.tar.gz
+
+  # replace my callsign with your callsign, no SSID, just the callsign
+  find . -type f -exec sed -i 's/ve4klm/yourcall/g' {} \;
+</pre>
+</p>
+<h4>Compile JNOS 2.0 binaries and install into test environment</h4>
+<p align="left" style="width: 80%;">
+<pre>
+  cd /jnos
+  rsync -av www.langelaar.net::official/2.0q .
+  cd 2.0q
+  ./configure
+  make
+  mv jnos ../rte
+  mv jnospwmgr ../rte
+</pre>
+<h4>Compile Mercury V2 on the same linux box hosting JNOS 2.0</h4>
+<p>
+<pre>
+  cd /jnos
+  wget https://github.com/Rhizomatica/mercury/archive/refs/heads/mercuryv2.zip --no-check-certificate
+  unzip mercuryv2.zip
+  cd mercury-mercuryv2
+  make clean
+  make
+  make install
+</pre>
+</p>
+<h4>Run Mercury Software and configure/run with a browser</h4>
+<p>
+<pre>
+  bring up another terminal
+  cd /jnos/mercury_mercuryv2
+  mercury
+  bring up a web browser and visit localhost:10000
+  set your sound cards, and your PTT configuraton, apply all changes
+  leave the browser running, it's your waterfall and monitor now
+  * the browser creates the mercury.ini when you apply changes,
+     so there is no need to hand edit the file .. I did not ...
+</pre>
+</p>
+<h4>Run JNOS 2.0</h4>
+<p>
+<pre>
+  bring up another terminal
+  cd /jnos/rte
+  ./jnos
+  you are now in the JNOS program. If everything goes correctly, your
+  browser will go into a connected state, and the system is ready for
+  incoming and outgoing calls. Simple eh ? Well, not quite :]
+</pre>
+</p>
+<h4>IF you are forwarding with a Winlink or RMS Trimode station</h4>
+<p>
+<pre>
+  You must setup your winlink user account in your JNOS environment
+   (of course replace my call with your callsign)
+
+     cd /jnos/rte
+
+     ./jnospwmgr -a VE4KLM -w
+
+  And make sure the winlink call is configured in autoexec.nos
+   (or just enter the command at the JNOS console if it's running already)
+
+    mbox winlinkcalls VE4KLM
+</pre>
+</p>
+<h4>Making outgoing calls and 'kicking a forward with remote station</h4>
+<p>
+<pre>
+  From the JNOS console, you can connect to another Mercury V2 station :
+
+   c vara k7ek
+
+  and have a keyboard interaction with Gary's BBS
+
+  The test environment is setup so you can also forward with Gary, but you
+  should arrange with him first if you want to do this. I'm already setup,
+  so the important files to note when forwarding with a remote system :
+
+   rte/spool/forward.bbs
+   rte/spool/rewrite
+
+  From the JNOS console, I can then 'kick' his station to forward :
+
+   mbox ki k7ek    [ will attempt forward only if I have messages for him ]
+
+   mbox ki K7ek    [ will force a forward, even if I have nothing for him,
+                      but it will check if he has something for me ]
+
+  To send a message to Gary, I would just go into the BBS and 'SP k7ek', or
+   use my thunderbird client interfaced to JNOS and email k7ek@k7ek 
+
+  If you have other stations you want to forward with, then add them
+  to forward.bbs and make sure there are rewrite rules for them, just
+  like what is setup for k7ek (Gary) ...
+</pre>
+<p>
+<h4>Closing comments</h4>
+<p>
+<pre>
+This write up makes a few assumptions, sorry, but it's the most point form
+and brief explanation I can come up with. You will have to figure it out on
+your own. I just hope this base infrastructure is enough of a start for you
+to experiment with. JNOS took me years to figure out, and yet still baffles
+me at times. I am a developer, with minimal SYSOP skills, and certainly not
+a NET103 or BBS operations expert like many out there. This is the physical
+configuration that I have been using to test the Mercury V2 software these
+past weeks, and it's worked quite well for me, Gary and myself have passed
+a decent amount of emails over the past week using Mercury V2 ...
+</pre>
+</p>
+<p>
+<font size="2"><i>* last updated on Sunday Morning, September 27, 2026 ...</i></font>
+</p>
+</body>
+</html>
