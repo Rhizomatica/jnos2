@@ -614,8 +614,15 @@ void *p1, *p2;
 	/* 01Aug2025, Maiko, Compiler warning unused, should check it */
 	if (ret == -1)
 	{
-		log (-1, "vara_sendstream -1");
-		return;
+		/*
+		 * 13Oct2026, Rhizomatica (Mercury), -1 is the data channel being
+		 * down (EBADF, ENOTCONN), typically while vara_rx reconnects it.
+		 * Returning here ended this process for good : the interface kept
+		 * receiving, but never sent another byte until JNOS was restarted.
+		 * The buffer is already gone (send_mbuf frees it), so carry on.
+		 */
+		log (-1, "vara_sendstream -1, data channel down, buffer dropped");
+		continue;
 	}
 	
 	if (--c < 1 && vif->txq > 1)

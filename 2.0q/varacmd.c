@@ -7,6 +7,7 @@
  *  attach vara <interface> <mtu> <hostname> <port>
  *  vara ptt <interface> <type> [<hostname> <port>]
  *  vara reset <interface> 
+ *  vara bw <interface> [500|2300|2750]
  *  vara pppmode <interface> [enable|disable]
 #ifdef _4Z1AC_VARAC
  *  vara kissport <interface> <hostname> <port>
@@ -48,6 +49,7 @@ static struct cmds DFAR Vatab[] = {
     { "command",      dovacommand,    0, 3, "vara command <interface> \"COMMAND\"" },
     { "cmddebug",     dovacmddebug,   0, 1, "vara cmddebug [on|off]" },
     { "debug",        dovadebug,      0, 1, "vara debug [on|off]" },
+    { "bw",           dovabw,         0, 2, "vara bw <interface> [500|2300|2750]" },
 #ifdef _4Z1AC_VARAC
     { "broadcast",    dovabroadcast,  0, 2, "vara broadcast <interface> [on|off]" },
     { "kissport",     dovakissport,   0, 2, "vara kissport <interface> <hostname> <port>" },
@@ -241,6 +243,57 @@ void *p;
 
   tprintf( "Resetting %s\n", ifacename );
   
+  return 0;
+}
+
+/*
+ * 13Oct2026, Rhizomatica (Mercury), the bandwidth asked of the modem was
+ * fixed at BW500, with no way to change it.  VARA HF also has 2300 and 2750,
+ * and Mercury (whose TNC is VARA compatible) keeps a BW500 session on its
+ * narrow modes, so JNOS could only ever use a fraction of a good link.  The
+ * default stays BW500.  A new setting goes to the modem at once if it is up,
+ * and on every (re)connect to it either way (vara_initmodem).
+ */
+int
+dovabw(argc,argv,p)
+int argc;
+char *argv[];
+void *p;
+{
+  struct iface *iface;
+  struct ifvara *vif;
+  char *ifacename = argv[1];
+  char buf[10];
+
+  iface = vara_getifacebyname( ifacename );
+  if( iface == NULLIF ){
+    tprintf( "No such interface: %s\n", ifacename );
+    return 1;
+  }
+
+  vif = iface->vara;
+  if( vif == NULL ){
+    tprintf( "%s not a VARA interface\n", ifacename );
+    return 1;
+  }
+
+  if( argc == 2 ){
+    tprintf( "%s bandwidth %s\n", ifacename, vif->outbw + 2 );
+    return 0;
+  }
+
+  if( strcmp( argv[2], "500" ) && strcmp( argv[2], "2300" ) && strcmp( argv[2], "2750" )){
+    tprintf( "Usage: vara bw <interface> [500|2300|2750]\n" );
+    return 1;
+  }
+
+  sprintf( buf, "BW%s", argv[2] );
+  free( vif->outbw );
+  vif->outbw = j2strdup( buf );
+
+  if( vif->ready )
+    vara_queuecommand( vif, vif->outbw );
+
   return 0;
 }
 

@@ -333,6 +333,7 @@ void varapttserial __ARGS(( struct ifvara *, int ));	/* 29Aug2023, Maiko */
 int dovaptt __ARGS((int,char **,void *));
 int dovareset __ARGS((int,char **,void *));
 int dovacommand __ARGS((int,char **,void *));
+int dovabw __ARGS((int,char **,void *));
 int dovacmddebug __ARGS((int,char **,void *));
 int dovadebug __ARGS((int,char **,void *));
 #ifdef _4Z1AC_VARAC
